@@ -65,6 +65,44 @@ from the hosting API, and start a Node build with these settings:
 nothing, because Hostinger does not start a persistent server process for it —
 the symptom is Hostinger's own 404 page on every route.
 
+## Blocker: Prisma does not run on the shared tier
+
+The app deploys, boots and serves the SPA on evyent.com. **Database access does
+not work**, and the cause is the platform, not the code.
+
+Every Prisma query fails with:
+
+```
+PANIC: timer has gone away
+```
+
+This is the Prisma query engine (6.19.3, debian-openssl-1.1.x) crashing, not a
+connection or credentials problem. Confirmed on both a migration statement and
+an ordinary `prisma.user.findUnique()`, so it affects all database access.
+
+Two related limits on this tier, found the same way:
+
+- `prisma migrate deploy` cannot run at all: it spawns a native schema-engine
+  binary and the host denies the spawn with `EACCES`. That is why migrations
+  are applied through the query engine instead (`services/schema-bootstrap.ts`).
+- MySQL is **not** co-located with the app. The database host is
+  `srv1518.hstgr.io`, not `localhost`. Use the host reported by the hosting
+  API; assuming localhost produces an authentication failure.
+
+### Options
+
+1. **Move to a Hostinger VPS.** Prisma runs normally on an ordinary Linux box,
+   and a VPS also removes the cold starts, the CPU limits and the lack of a
+   persistent disk that photo upload will need. Same vendor. Recommended.
+2. **Replace Prisma with a pure-JS driver** (`mysql2`, optionally with Kysely).
+   No native engine, so nothing to panic. This keeps shared hosting viable but
+   is a rewrite of the data-access layer across every route.
+3. **Try other Prisma versions or engine types.** The binary engine is ruled out
+   already, since it needs the spawn the host denies.
+
+Until one of those lands, evyent.com serves the front end and returns an error
+from any endpoint that touches the database.
+
 ## Verifying a deploy
 
 ```bash
