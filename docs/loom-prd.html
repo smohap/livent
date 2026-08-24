@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loom — Product Requirements Document</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Source+Serif+4:ital,wght@0,400;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: 0 0% 6%;
+    --surface: 0 0% 10%;
+    --radius: 1rem;
+    --mono: 0 0% 100%;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Poppins', sans-serif;
+    font-weight:400;
+    background:hsl(var(--bg));
+    color:#fff;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  em, i, .serif{ font-family:'Source Serif 4', serif; font-style:italic; }
+
+  /* ambient liquid background */
+  .ambient{
+    position:fixed; inset:0; z-index:0; overflow:hidden; background:#0c0c0d;
+  }
+  .blob{
+    position:absolute; border-radius:50%;
+    filter:blur(90px);
+    opacity:.35;
+    background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.55), rgba(255,255,255,0) 70%);
+    animation:drift 26s ease-in-out infinite;
+  }
+  .blob.b1{width:44vw;height:44vw; top:-10%; left:-10%; animation-delay:0s;}
+  .blob.b2{width:38vw;height:38vw; bottom:-15%; right:-5%; animation-delay:-8s; opacity:.22;}
+  .blob.b3{width:30vw;height:30vw; top:40%; left:60%; animation-delay:-15s; opacity:.18;}
+  @keyframes drift{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    50%{ transform:translate(4%,6%) scale(1.08); }
+  }
+  .grain{position:absolute; inset:0; background:repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0 1px, transparent 1px 3px);}
+
+  /* glass system */
+  .liquid-glass, .liquid-glass-strong{
+    position:relative; overflow:hidden; border:none; border-radius:var(--radius);
+  }
+  .liquid-glass{
+    background:rgba(255,255,255,0.02);
+    background-blend-mode:luminosity;
+    backdrop-filter:blur(4px);
+    box-shadow:inset 0 1px 1px rgba(255,255,255,0.1);
+  }
+  .liquid-glass-strong{
+    background:rgba(255,255,255,0.035);
+    backdrop-filter:blur(30px);
+    box-shadow:4px 4px 4px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.15);
+  }
+  .liquid-glass::before, .liquid-glass-strong::before{
+    content:""; position:absolute; inset:0; border-radius:inherit; padding:1.4px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 20%, transparent 40%, transparent 60%, rgba(255,255,255,0.15) 80%, rgba(255,255,255,0.45) 100%);
+    -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude;
+    pointer-events:none;
+  }
+  .liquid-glass-strong::before{
+    background:linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 20%, transparent 40%, transparent 60%, rgba(255,255,255,0.2) 80%, rgba(255,255,255,0.5) 100%);
+  }
+  /* readable document panel: same system, higher fill for long text */
+  .doc-panel{ background:rgba(10,10,10,0.55); backdrop-filter:blur(20px); }
+
+  /* layout */
+  .shell{ position:relative; z-index:1; display:flex; min-height:100vh; }
+  aside{
+    width:280px; flex-shrink:0; position:sticky; top:0; align-self:flex-start;
+    height:100vh; padding:28px 18px; display:flex; flex-direction:column; gap:18px;
+  }
+  aside .brand{ display:flex; align-items:center; gap:10px; padding:0 6px 10px; }
+  aside .brand .mark{ width:30px; height:30px; border-radius:9px; background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-weight:600; }
+  aside .brand span{ font-size:1.15rem; font-weight:600; letter-spacing:-0.02em; }
+  nav.toc{ flex:1; overflow-y:auto; padding:6px; border-radius:var(--radius); }
+  nav.toc a{
+    display:block; padding:9px 14px; color:rgba(255,255,255,.6); text-decoration:none;
+    font-size:.82rem; border-radius:10px; transition:.2s; margin-bottom:2px;
+  }
+  nav.toc a:hover, nav.toc a.active{ color:#fff; background:rgba(255,255,255,.06); }
+  aside .meta{ padding:14px; border-radius:var(--radius); font-size:.72rem; color:rgba(255,255,255,.5); line-height:1.6; }
+  aside .meta b{ color:rgba(255,255,255,.85); font-weight:500; }
+
+  main{ flex:1; padding:60px 64px 120px; max-width:980px; }
+  .cover{ padding:56px 48px; border-radius:1.8rem; margin-bottom:64px; }
+  .eyebrow{ font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:rgba(255,255,255,.5); margin-bottom:18px; }
+  h1.title{ font-size:3.4rem; font-weight:500; letter-spacing:-0.03em; line-height:1.05; margin-bottom:18px; }
+  .cover p.lead{ font-size:1.15rem; color:rgba(255,255,255,.7); max-width:640px; line-height:1.6; margin-bottom:28px; }
+  .pillrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .pill{
+    padding:8px 16px; border-radius:999px; font-size:.75rem; color:rgba(255,255,255,.8);
+  }
+  .pill.mvp{ color:#fff; }
+
+  section.block{ margin-bottom:64px; scroll-margin-top:30px; }
+  .sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:22px; }
+  .sec-num{ font-family:'Source Serif 4', serif; font-style:italic; color:rgba(255,255,255,.35); font-size:1.1rem; }
+  h2{ font-size:1.9rem; font-weight:500; letter-spacing:-0.02em; }
+  h3{ font-size:1.2rem; font-weight:500; margin:26px 0 10px; letter-spacing:-0.01em; }
+  p{ color:rgba(255,255,255,.72); line-height:1.75; font-size:.97rem; margin-bottom:12px; }
+  .panel{ padding:28px 30px; border-radius:1.3rem; margin-bottom:18px; }
+  ul.clean{ list-style:none; }
+  ul.clean li{ position:relative; padding-left:20px; color:rgba(255,255,255,.72); line-height:1.7; font-size:.95rem; margin-bottom:8px; }
+  ul.clean li::before{ content:"—"; position:absolute; left:0; color:rgba(255,255,255,.35); }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media(max-width:900px){ .grid2,.grid3{ grid-template-columns:1fr; } }
+
+  .feature-card{ padding:26px; border-radius:1.2rem; }
+  .feature-card .tag{ display:inline-block; font-size:.65rem; letter-spacing:.1em; text-transform:uppercase; padding:4px 10px; border-radius:999px; background:rgba(255,255,255,.08); color:rgba(255,255,255,.6); margin-bottom:14px; }
+  .feature-card h4{ font-size:1.05rem; font-weight:500; margin-bottom:8px; }
+  .feature-card p{ font-size:.88rem; margin-bottom:10px; }
+  .feature-card .stories{ font-size:.8rem; color:rgba(255,255,255,.55); }
+  .feature-card .stories li{ font-size:.8rem; }
+
+  table{ width:100%; border-collapse:collapse; font-size:.86rem; margin-top:8px; }
+  th{ text-align:left; color:rgba(255,255,255,.5); font-weight:500; font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; padding:10px 14px; border-bottom:1px solid rgba(255,255,255,.12); }
+  td{ padding:12px 14px; color:rgba(255,255,255,.75); border-bottom:1px solid rgba(255,255,255,.06); vertical-align:top; }
+  tr:last-child td{ border-bottom:none; }
+
+  .ia-diagram{ font-family:'Source Serif 4', serif; font-style:italic; color:rgba(255,255,255,.55); font-size:.95rem; line-height:2.1; white-space:pre; overflow-x:auto; padding:24px; }
+
+  .diff-num{ font-size:2.4rem; font-family:'Source Serif 4', serif; font-style:italic; color:rgba(255,255,255,.25); line-height:1; margin-bottom:6px; }
+
+  details{ border-radius:1rem; margin-bottom:12px; overflow:hidden; }
+  summary{ cursor:pointer; padding:18px 22px; font-weight:500; font-size:.95rem; list-style:none; display:flex; justify-content:space-between; align-items:center; }
+  summary::-webkit-details-marker{ display:none; }
+  summary::after{ content:"+"; color:rgba(255,255,255,.5); font-size:1.2rem; font-weight:300; }
+  details[open] summary::after{ content:"–"; }
+  .details-body{ padding:0 22px 22px; }
+
+  .quote{ padding:40px; border-radius:1.4rem; text-align:center; margin:40px 0; }
+  .quote p{ font-size:1.3rem; color:rgba(255,255,255,.85); font-family:'Source Serif 4', serif; font-style:italic; margin-bottom:14px; }
+  .quote .who{ font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; color:rgba(255,255,255,.45); }
+
+  footer{ padding:30px 0; text-align:center; color:rgba(255,255,255,.35); font-size:.78rem; }
+
+  @media(max-width:1000px){
+    aside{ display:none; }
+    main{ padding:40px 22px 80px; }
+    h1.title{ font-size:2.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="grain"></div></div>
+
+<div class="shell">
+  <aside>
+    <div class="brand liquid-glass"><div class="mark">L</div><span>Loom</span></div>
+    <nav class="toc liquid-glass">
+      <a href="#vision">01 · Vision</a>
+      <a href="#problem">02 · Problem</a>
+      <a href="#personas">03 · Personas</a>
+      <a href="#differentiators">04 · Differentiators</a>
+      <a href="#ia">05 · Information Architecture</a>
+      <a href="#features">06 · Core Features</a>
+      <a href="#roles">07 · Roles &amp; Permissions</a>
+      <a href="#nfr">08 · Non-Functional Requirements</a>
+      <a href="#scope">09 · Release Scope</a>
+      <a href="#metrics">10 · Success Metrics</a>
+      <a href="#risks">11 · Risks &amp; Open Questions</a>
+      <a href="#glossary">12 · Glossary</a>
+    </nav>
+    <div class="meta liquid-glass">
+      <div><b>Loom</b> — Product Requirements Document</div>
+      <div>Version 1.0 · Draft</div>
+      <div>23 August 2026</div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="cover liquid-glass-strong">
+      <div class="eyebrow">Product Requirements Document</div>
+      <h1 class="title">The operating<br>system for <em>every event.</em></h1>
+      <p class="lead">Loom is a 360° event operating system that manages an entire event lifecycle — planning, invitations, RSVP, payments, seating, communication, media and post-event wrap-up — for individuals, families and organisations, across every phase of a celebration or programme.</p>
+      <div class="pillrow">
+        <div class="pill liquid-glass mvp">Weddings &amp; Family Events</div>
+        <div class="pill liquid-glass mvp">Corporate &amp; Conferences</div>
+        <div class="pill liquid-glass mvp">Community &amp; Fundraising</div>
+      </div>
+    </div>
+
+    <!-- 01 VISION -->
+    <section class="block" id="vision">
+      <div class="sec-head"><span class="sec-num">01</span><h2>Vision &amp; Positioning</h2></div>
+      <div class="panel doc-panel">
+        <p>Most event tools manage a single event: one date, one guest list, one RSVP form. Real events rarely work that way. A wedding is an engagement, a mehendi, a sangeet, a ceremony and a reception. A conference is registration, a keynote, breakout sessions and a dinner. Each has its own guests, schedule, budget and team — yet all of it belongs to one story, told to one host and one guest list.</p>
+        <p>Loom's core thesis: <span class="serif">one event → multiple phases → multiple teams → multiple guests → one shared workspace.</span> Rather than positioning as "an event planning app," Loom is positioned as the operating system underneath any event, of any size, for any purpose.</p>
+      </div>
+      <div class="quote liquid-glass">
+        <p>"Plan it. Invite. Coordinate. Pay. Experience. Remember."</p>
+        <div class="who">Loom Product Tagline</div>
+      </div>
+    </section>
+
+    <!-- 02 PROBLEM -->
+    <section class="block" id="problem">
+      <div class="sec-head"><span class="sec-num">02</span><h2>Problem &amp; Opportunity</h2></div>
+      <div class="grid2">
+        <div class="panel doc-panel">
+          <h3>Today, organisers stitch together five tools</h3>
+          <ul class="clean">
+            <li>A spreadsheet for the guest list and RSVPs</li>
+            <li>A separate invitation or e-vite tool per phase</li>
+            <li>A payments app or cash envelope for gifts and vendor payments</li>
+            <li>A group chat for coordination that guests and vendors both see</li>
+            <li>A shared drive for photos, contracts and floor plans</li>
+          </ul>
+        </div>
+        <div class="panel doc-panel">
+          <h3>Guests experience the same fragmentation</h3>
+          <p>A single wedding can generate five unconnected invitations, five RSVP links and five separate "which table am I on" conversations — for one celebration, one couple, one guest list.</p>
+          <p>Corporate organisers face a parallel problem at larger scale: registration, ticketing, speaker logistics, sponsor deliverables and post-event reporting typically live in different systems entirely.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 PERSONAS -->
+    <section class="block" id="personas">
+      <div class="sec-head"><span class="sec-num">03</span><h2>Target Users &amp; Personas</h2></div>
+      <div class="grid3">
+        <div class="panel doc-panel">
+          <h4 style="font-weight:500;margin-bottom:8px;">The Host / Owner</h4>
+          <p style="font-size:.85rem;">A couple, family or executive sponsor. Owns the master event, sets the vision and budget, and delegates execution to a manager and teams.</p>
+        </div>
+        <div class="panel doc-panel">
+          <h4 style="font-weight:500;margin-bottom:8px;">The Organiser / Manager</h4>
+          <p style="font-size:.85rem;">A planner, corporate event manager, or family member running day-to-day logistics — teams, vendors, budget, schedule and guest communications.</p>
+        </div>
+        <div class="panel doc-panel">
+          <h4 style="font-weight:500;margin-bottom:8px;">The Team Lead / Vendor</h4>
+          <p style="font-size:.85rem;">Owns one workstream — catering, photography, transport — with a scoped workspace, tasks and invoices, without visibility into the whole event.</p>
+        </div>
+        <div class="panel doc-panel">
+          <h4 style="font-weight:500;margin-bottom:8px;">The Guest</h4>
+          <p style="font-size:.85rem;">Receives one personalised invitation across every phase they're invited to, RSVPs, chooses a meal, sees their table, sends a gift, and shares photos — from a single simple dashboard.</p>
+        </div>
+        <div class="panel doc-panel">
+          <h4 style="font-weight:500;margin-bottom:8px;">The Sponsor / Exhibitor</h4>
+          <p style="font-size:.85rem;">A corporate partner managing a package, deliverables, booth logistics and invoices through a self-serve portal.</p>
+        </div>
+        <div class="panel doc-panel">
+          <h4 style="font-weight:500;margin-bottom:8px;">Check-in / Volunteer Staff</h4>
+          <p style="font-size:.85rem;">Front-line staff with a narrow, fast interface — scan a ticket, confirm a table, resolve a walk-in.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 DIFFERENTIATORS -->
+    <section class="block" id="differentiators">
+      <div class="sec-head"><span class="sec-num">04</span><h2>Killer Differentiators</h2></div>
+      <div class="grid2">
+        <div class="panel doc-panel"><div class="diff-num">01</div><h4 style="font-weight:500;margin-bottom:6px;">The Multi-Phase Event Graph</h4><p style="font-size:.87rem;">One master event, unlimited connected phases — each with its own guests, RSVP, schedule and budget, rolled up into a single guest and organiser view.</p></div>
+        <div class="panel doc-panel"><div class="diff-num">02</div><h4 style="font-weight:500;margin-bottom:6px;">An Event Operating System, Not a Reminder</h4><p style="font-size:.87rem;">Loom tracks who needs to do what, by when, with what budget, for which phase — not just the date and time of the event.</p></div>
+        <div class="panel doc-panel"><div class="diff-num">03</div><h4 style="font-weight:500;margin-bottom:6px;">An Intelligent Seating Engine</h4><p style="font-size:.87rem;">Rules, constraints, dietary data and randomisation combine to auto-generate a seating chart in seconds — then let organisers refine it by hand.</p></div>
+        <div class="panel doc-panel"><div class="diff-num">04</div><h4 style="font-weight:500;margin-bottom:6px;">Organiser Operations + Guest Experience, One Platform</h4><p style="font-size:.87rem;">Most tools optimise for either the planner or the attendee. Loom connects both sides of the same event in real time.</p></div>
+      </div>
+    </section>
+
+    <!-- 05 IA -->
+    <section class="block" id="ia">
+      <div class="sec-head"><span class="sec-num">05</span><h2>Information Architecture</h2></div>
+      <p>Seven foundational objects underpin every feature: <b style="color:#fff;font-weight:500;">Master Event, Phase, People, Teams, Tasks, Money, Experience.</b> Everything else — RSVP, seating, menus, tickets, sponsorships, media and schedules — attaches to these.</p>
+      <div class="panel liquid-glass-strong ia-diagram">Organisation / Account
+  └── Master Event  (e.g. "Sarah &amp; John's Wedding")
+        ├── Phase — Engagement    · Guests · RSVP · Schedule · Budget · Media
+        ├── Phase — Mehendi       · Guests · RSVP · Schedule · Budget · Media
+        ├── Phase — Sangeet       · Guests · RSVP · Seating  · Menu   · Media
+        ├── Phase — Ceremony      · Guests · RSVP · Seating  · Menu   · Media
+        └── Phase — Reception     · Guests · RSVP · Seating  · Menu   · Media</div>
+      <p style="margin-top:14px;">A guest sees one entry — <span class="serif">"Sarah &amp; John's Wedding"</span> — with a per-phase status underneath (Attending / Maybe / Declined), rather than five disconnected invitations.</p>
+    </section>
+
+    <!-- 06 FEATURES -->
+    <section class="block" id="features">
+      <div class="sec-head"><span class="sec-num">06</span><h2>Core Feature Set</h2></div>
+      <p>Eleven feature areas, each scoped with representative user stories and acceptance criteria. Tag indicates target release.</p>
+
+      <details class="liquid-glass" open>
+        <summary>6.1 · Multi-Phase Events <span class="pill liquid-glass mvp" style="margin-left:8px;">MVP</span></summary>
+        <div class="details-body">
+          <p>Organisers create a master event, then add named phases (e.g. Engagement, Mehendi, Wedding) from a template or from scratch. Each phase inherits master-event branding but carries its own date, venue, guest list, RSVP, schedule, budget and media.</p>
+          <ul class="clean stories">
+            <li>As an organiser, I can add, rename, reorder and delete phases within a master event.</li>
+            <li>As an organiser, I can start from a Wedding, Conference, Birthday or Corporate Offsite template with pre-built phases.</li>
+            <li>As a guest, I see one event with a per-phase attendance summary, not separate events.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="liquid-glass">
+        <summary>6.2 · Invitations &amp; RSVP <span class="pill liquid-glass mvp" style="margin-left:8px;">MVP</span></summary>
+        <div class="details-body">
+          <p>A drag-and-drop invitation builder supports personalised digital invitations sent by email, SMS, WhatsApp link or QR code, with per-guest or per-phase RSVP. Custom RSVP questions (plus-ones, dietary needs, accessibility, transport) are configurable per phase.</p>
+          <ul class="clean stories">
+            <li>As an organiser, I can send one invitation covering several phases, and see per-phase responses in one table.</li>
+            <li>As a guest, I can RSVP "yes" to the wedding and "no" to the mehendi in a single flow.</li>
+            <li>As an organiser, I can configure automated reminders for guests who haven't responded by a deadline.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="liquid-glass">
+        <summary>6.3 · Monetary Gifts &amp; Sponsorship <span class="pill liquid-glass mvp" style="margin-left:8px;">MVP → Phase 2</span></summary>
+        <div class="details-body">
+          <p>Guests can send a monetary gift, contribute to a group gift, or give to a nominated charity, with organiser-configurable privacy (public/anonymous amount and name). Corporate events add tiered sponsorship packages, a sponsor portal, contracts and invoice tracking. All payment processing routes through a licensed provider (e.g. Stripe/Adyen) — Loom never stores raw card data.</p>
+          <ul class="clean stories">
+            <li>As a guest, I can send a gift with a message, and choose whether my name and amount are shown publicly.</li>
+            <li>As an organiser, I can define sponsorship tiers with benefits, and track each sponsor's payment and deliverable status.</li>
+            <li>As a sponsor, I can log into a self-serve portal to upload assets and see my invoices.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="liquid-glass">
+        <summary>6.4 · Seating &amp; Table Allocation <span class="pill liquid-glass mvp" style="margin-left:8px;">MVP</span></summary>
+        <div class="details-body">
+          <p>For any phase requiring seating, organisers define table count and seats-per-table, then generate a randomised seating chart in one click — respecting "must sit together," "must not sit together" and VIP/children table rules. Organisers can regenerate, lock tables, or drag individual guests afterward.</p>
+          <ul class="clean stories">
+            <li>As an organiser, I can set 20 tables of 10 and randomly allocate 200 confirmed guests in a single action.</li>
+            <li>As an organiser, I can lock a table so regeneration doesn't reshuffle it.</li>
+            <li>As a guest, I can see my table number and tablemates ahead of the event.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="liquid-glass">
+        <summary>6.5 · Menu Sharing &amp; Selection <span class="pill liquid-glass mvp" style="margin-left:8px;">MVP</span></summary>
+        <div class="details-body">
+          <p>Organisers build a per-phase menu (starter, main, dessert, drinks) and, where selection is required, guests choose their meal and flag dietary restrictions during RSVP. Caterers see live aggregated counts by dish and dietary category.</p>
+          <ul class="clean stories">
+            <li>As a guest, I can select my main course and flag a nut allergy when I RSVP.</li>
+            <li>As a caterer, I see a live count: 86 chicken, 104 vegetarian, 21 vegan, 13 gluten-free.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="liquid-glass">
+        <summary>6.6 · Team Duties &amp; Task Planning <span class="pill liquid-glass mvp" style="margin-left:8px;">MVP</span></summary>
+        <div class="details-body">
+          <p>Organisers create teams (catering, decoration, photography, transport, etc.), assign tasks with owners, due dates, priority and dependencies, and each team gets a scoped workspace showing only what's relevant to them.</p>
+          <ul class="clean stories">
+            <li>As an organiser, I can assign a task to the catering team with a due date and see it block a dependent finance task.</li>
+            <li>As a team lead, I only see my own team's tasks, budget and communications by default.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="liquid-glass">
+        <summary>6.7 · Polls &amp; Communication <span class="pill liquid-glass mvp" style="margin-left:8px;">MVP</span></summary>
+        <div class="details-body">
+          <p>Event-wide or phase-specific polls (single choice, ranking, yes/no) alongside broadcast announcements to guests, teams, vendors or sponsors, delivered in-app, by push, email or SMS, with a high-priority emergency-broadcast mode.</p>
+          <ul class="clean stories">
+            <li>As an organiser, I can poll guests on a date change and see results live.</li>
+            <li>As an organiser, I can send an emergency broadcast ("ceremony moved indoors") across every channel at once.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="liquid-glass">
+        <summary>6.8 · Ticketing &amp; Seat Selection <span class="pill liquid-glass mvp" style="margin-left:8px;">Premium · Phase 2</span></summary>
+        <div class="details-body">
+          <p>For ticketed phases and conferences: multiple ticket types, promo codes, capacity and waitlist management, a visual seat map, QR-based check-in and a live registered/checked-in/no-show dashboard.</p>
+          <ul class="clean stories">
+            <li>As an organiser, I can sell VIP, general and early-bird tickets with different prices and capacities.</li>
+            <li>As check-in staff, I can scan a QR code and confirm entry in under two seconds.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="liquid-glass">
+        <summary>6.9 · Photo &amp; Video Sharing <span class="pill liquid-glass mvp" style="margin-left:8px;">MVP</span></summary>
+        <div class="details-body">
+          <p>A customised event media library with organiser-selected branding (background, frame, watermark), guest uploads into shared albums, and organiser-controlled download permissions (original vs. compressed, guest-only vs. public).</p>
+          <ul class="clean stories">
+            <li>As an organiser, I can brand the gallery with our event colours and disable downloads until the reception ends.</li>
+            <li>As a guest, I can upload my own photos into the shared wedding album from my phone.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="liquid-glass">
+        <summary>6.10 · Invoice &amp; Expense Tracking <span class="pill liquid-glass mvp" style="margin-left:8px;">MVP</span></summary>
+        <div class="details-body">
+          <p>Each team or vendor submits invoices against a budget category and phase; a lightweight approval workflow (team lead → event manager → finance) routes them to payment. Organisers see budget vs. committed vs. paid vs. outstanding in real time.</p>
+          <ul class="clean stories">
+            <li>As a team lead, I can submit a caterer's invoice against the "Catering" budget line for approval.</li>
+            <li>As an organiser, I can see that catering is 18% over budget before signing off the next invoice.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="liquid-glass">
+        <summary>6.11 · Event Details &amp; Schedule <span class="pill liquid-glass mvp" style="margin-left:8px;">MVP</span></summary>
+        <div class="details-body">
+          <p>A shared, phase-aware timeline with venue, map, dress code and responsible team per item, plus an optional live "run of show" view for the event-day control room, showing current, next and upcoming activities in real time.</p>
+          <ul class="clean stories">
+            <li>As a guest, I see one shared schedule across all phases I'm attending, in my timezone.</li>
+            <li>As an organiser, on the day, I can see what's happening now and what's next across every phase running in parallel.</li>
+          </ul>
+        </div>
+      </details>
+    </section>
+
+    <!-- 07 ROLES -->
+    <section class="block" id="roles">
+      <div class="sec-head"><span class="sec-num">07</span><h2>Roles &amp; Permissions</h2></div>
+      <div class="panel doc-panel">
+        <table>
+          <tr><th>Role</th><th>Scope</th></tr>
+          <tr><td>Owner</td><td>Full control of the master event, all phases, billing and access.</td></tr>
+          <tr><td>Event Manager</td><td>Full operational control — phases, teams, budget, communications.</td></tr>
+          <tr><td>Team Lead / Member</td><td>Own team's tasks, budget line, invoices and communications only.</td></tr>
+          <tr><td>Finance</td><td>Budget, invoice approval and payment status across the event.</td></tr>
+          <tr><td>Guest</td><td>Guest-facing dashboard: invitation, RSVP, menu, seating, gift, media, chat.</td></tr>
+          <tr><td>Vendor</td><td>Scoped workspace for one assigned engagement — schedule, tasks, invoice.</td></tr>
+          <tr><td>Sponsor</td><td>Sponsor portal — package, assets, benefits, invoices.</td></tr>
+          <tr><td>Check-in / Volunteer Staff</td><td>Ticket scanning and attendance tools only.</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- 08 NFR -->
+    <section class="block" id="nfr">
+      <div class="sec-head"><span class="sec-num">08</span><h2>Non-Functional Requirements</h2></div>
+      <div class="grid2">
+        <div class="panel doc-panel"><h4 style="font-weight:500;margin-bottom:8px;">Privacy &amp; Security</h4><ul class="clean" style="font-size:.85rem;"><li>Role-based access control and MFA for organisers and finance roles</li><li>Payment-provider tokenisation — no raw card data stored</li><li>Guest-level media and data-visibility controls, audit logs, data export and account deletion</li></ul></div>
+        <div class="panel doc-panel"><h4 style="font-weight:500;margin-bottom:8px;">Performance &amp; Scale</h4><ul class="clean" style="font-size:.85rem;"><li>Supports events from a 10-guest dinner to a 5,000-person conference on the same data model</li><li>Real-time RSVP, budget and check-in dashboards</li><li>Bulk operations (invite, remind, seat) complete for 2,000+ guests without blocking the UI</li></ul></div>
+        <div class="panel doc-panel"><h4 style="font-weight:500;margin-bottom:8px;">Accessibility &amp; Localisation</h4><ul class="clean" style="font-size:.85rem;"><li>Guest experience mobile-first, keyboard accessible, screen-reader compatible</li><li>Multi-language and multi-currency support per event</li></ul></div>
+        <div class="panel doc-panel"><h4 style="font-weight:500;margin-bottom:8px;">Platform</h4><ul class="clean" style="font-size:.85rem;"><li>Organiser: responsive web + native mobile</li><li>Guest: mobile-first web/PWA at launch, no install required</li><li>Every event gets a shareable mini-website at <span class="serif">events.loom.app/name</span></li></ul></div>
+      </div>
+    </section>
+
+    <!-- 09 SCOPE -->
+    <section class="block" id="scope">
+      <div class="sec-head"><span class="sec-num">09</span><h2>Release Scope</h2></div>
+      <div class="grid3">
+        <div class="panel liquid-glass-strong">
+          <div class="tag" style="display:inline-block;font-size:.65rem;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.12);margin-bottom:12px;">MVP</div>
+          <ul class="clean" style="font-size:.85rem;">
+            <li>Accounts, event &amp; multi-phase creation</li>
+            <li>Event mini-website &amp; invitations</li>
+            <li>Guest management &amp; RSVP</li>
+            <li>Schedule, teams &amp; tasks</li>
+            <li>Polls &amp; communication</li>
+            <li>Menu selection</li>
+            <li>Random / rule-based seating</li>
+            <li>Budget, expenses &amp; invoices</li>
+            <li>Photo &amp; video sharing</li>
+            <li>Basic gifting/payments</li>
+            <li>Organiser &amp; guest dashboards</li>
+          </ul>
+        </div>
+        <div class="panel doc-panel">
+          <div class="tag" style="display:inline-block;font-size:.65rem;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.08);margin-bottom:12px;color:rgba(255,255,255,.7);">Phase 2</div>
+          <ul class="clean" style="font-size:.85rem;">
+            <li>Ticketing &amp; seat selection (premium)</li>
+            <li>QR check-in &amp; badge printing</li>
+            <li>Sponsorship &amp; sponsor portal</li>
+            <li>Vendor portal</li>
+            <li>Accommodation &amp; transport</li>
+            <li>Advanced finance &amp; analytics</li>
+            <li>WhatsApp integration</li>
+            <li>Speaker &amp; exhibitor management</li>
+          </ul>
+        </div>
+        <div class="panel doc-panel">
+          <div class="tag" style="display:inline-block;font-size:.65rem;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.08);margin-bottom:12px;color:rgba(255,255,255,.7);">Phase 3</div>
+          <ul class="clean" style="font-size:.85rem;">
+            <li>AI event assistant ("plan my wedding for 500 people")</li>
+            <li>Proactive AI operations alerts</li>
+            <li>Vendor &amp; venue marketplace</li>
+            <li>Attendee networking / matching</li>
+            <li>AI seating from natural-language constraints</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 METRICS -->
+    <section class="block" id="metrics">
+      <div class="sec-head"><span class="sec-num">10</span><h2>Success Metrics</h2></div>
+      <div class="panel doc-panel">
+        <table>
+          <tr><th>Metric</th><th>Why it matters</th></tr>
+          <tr><td>% of events created with 2+ phases</td><td>Validates the core multi-phase thesis over single-event tools</td></tr>
+          <tr><td>Guest RSVP completion rate</td><td>Measures whether guests find the unified invitation easier than the status quo</td></tr>
+          <tr><td>Time to generate a seating chart</td><td>Direct measure of the seating engine's value versus manual spreadsheets</td></tr>
+          <tr><td>% of budget tracked in-app vs. off-platform</td><td>Indicates whether Loom is replacing spreadsheets for finance</td></tr>
+          <tr><td>Guest media contribution rate</td><td>Engagement proxy for the shared gallery experience</td></tr>
+          <tr><td>Premium ticketing attach rate</td><td>Core monetisation signal for corporate/ticketed events</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- 11 RISKS -->
+    <section class="block" id="risks">
+      <div class="sec-head"><span class="sec-num">11</span><h2>Risks &amp; Open Questions</h2></div>
+      <div class="panel doc-panel">
+        <ul class="clean">
+          <li><b style="color:#fff;">Payments &amp; compliance</b> — monetary gifting and sponsorship require jurisdiction-specific compliance (KYC, tax reporting) that varies by country; needs legal review before launch markets are finalised.</li>
+          <li><b style="color:#fff;">Complexity vs. onboarding</b> — the breadth of the feature set risks overwhelming a first-time individual host; the MVP wizard and templates need to hide advanced modules until needed.</li>
+          <li><b style="color:#fff;">Seating engine edge cases</b> — very large or highly constrained guest lists (e.g. many mutual exclusions) may not always produce a valid full assignment; needs a clear "couldn't fully seat N guests" fallback state.</li>
+          <li><b style="color:#fff;">Open question</b> — should team/vendor accounts be free, or bundled into the organiser's plan? Affects vendor-side adoption incentives.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 12 GLOSSARY -->
+    <section class="block" id="glossary">
+      <div class="sec-head"><span class="sec-num">12</span><h2>Glossary</h2></div>
+      <div class="panel doc-panel">
+        <table>
+          <tr><td style="width:180px;"><b style="color:#fff;">Master Event</b></td><td>The top-level container a host creates — e.g. "Sarah &amp; John's Wedding" — that groups one or more phases.</td></tr>
+          <tr><td><b style="color:#fff;">Phase</b></td><td>A single occasion within a master event (Engagement, Mehendi, Reception, Keynote) with its own guests, RSVP, schedule and budget.</td></tr>
+          <tr><td><b style="color:#fff;">Run of Show</b></td><td>The live, event-day timeline view showing current and next activities across the event.</td></tr>
+          <tr><td><b style="color:#fff;">Team Workspace</b></td><td>A scoped view of tasks, budget and communication for one team (catering, photography, etc.).</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <footer>Loom PRD · v1.0 · Prepared for internal review</footer>
+  </main>
+</div>
+
+<script>
+  const links = document.querySelectorAll('nav.toc a');
+  const sections = document.querySelectorAll('section.block');
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        links.forEach(l=>l.classList.remove('active'));
+        const match = document.querySelector('nav.toc a[href="#'+e.target.id+'"]');
+        if(match) match.classList.add('active');
+      }
+    });
+  }, {rootMargin:"-20% 0px -70% 0px"});
+  sections.forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>

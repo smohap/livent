@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * livent design system.
+ * Strict grayscale: every token is an `0 0% X%` HSL triple, no colour anywhere.
+ * Depth comes from the two liquid-glass tiers, not from hue.
+ */
+:root {
+  --radius: 1rem;
+
+  --background: 0 0% 4%;
+  --surface: 0 0% 8%;
+  --surface-raised: 0 0% 12%;
+  --foreground: 0 0% 100%;
+  --muted: 0 0% 62%;
+  --subtle: 0 0% 45%;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Poppins', system-ui, sans-serif;
+    font-weight: 400;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Serif italic is reserved for emphasis inside headings. */
+  h1 em,
+  h2 em,
+  h3 em,
+  h1 i,
+  h2 i,
+  h3 i,
+  h1 .italic,
+  h2 .italic,
+  h3 .italic {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-style: italic;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer components {
+  /*
+   * The gradient hairline is drawn by a masked ::before rather than a border,
+   * so the edge can be bright at the top and bottom and vanish at the sides -
+   * which is what makes the panels read as glass rather than as cards.
+   */
+  .liquid-glass,
+  .liquid-glass-strong {
+    position: relative;
+    overflow: hidden;
+    border: none;
+    border-radius: var(--radius);
+  }
+
+  .liquid-glass {
+    background: rgba(255, 255, 255, 0.01);
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  }
+
+  .liquid-glass-strong {
+    background: rgba(255, 255, 255, 0.01);
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(50px);
+    -webkit-backdrop-filter: blur(50px);
+    box-shadow:
+      4px 4px 4px rgba(0, 0, 0, 0.05),
+      inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  }
+
+  .liquid-glass::before,
+  .liquid-glass-strong::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(255, 255, 255, 0.15) 20%,
+      transparent 40%,
+      transparent 60%,
+      rgba(255, 255, 255, 0.15) 80%,
+      rgba(255, 255, 255, 0.45) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .liquid-glass-strong::before {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.2) 20%,
+      transparent 40%,
+      transparent 60%,
+      rgba(255, 255, 255, 0.2) 80%,
+      rgba(255, 255, 255, 0.5) 100%
+    );
+  }
+
+  /*
+   * Inside the app shell there is no video behind the glass, so panels need a
+   * little more fill to stay legible over long tables of text.
+   */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.035);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+  }
+
+  .glass-input {
+    @apply w-full rounded-xl bg-white/[0.06] px-4 py-2.5 text-sm text-white outline-none transition;
+    @apply placeholder:text-white/35 focus:bg-white/[0.1];
+    border: none;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+
+  .glass-input:focus {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs text-white/80;
+  }
+
+  .eyebrow {
+    @apply text-xs uppercase tracking-[0.18em] text-white/50;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

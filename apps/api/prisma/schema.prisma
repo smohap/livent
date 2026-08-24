@@ -1,0 +1,609 @@
+// livent — the operating system for every event.
+// Seven foundational objects: Event, Phase, People, Teams, Tasks, Money, Experience.
+// Everything else in the schema attaches to one of these.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------
+// Identity & accounts
+// ---------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  avatarColor  String   @default("#ffffff")
+  createdAt    DateTime @default(now())
+
+  memberships   Membership[]
+  ownedEvents   Event[]        @relation("EventOwner")
+  tasks         Task[]         @relation("TaskOwner")
+  announcements Announcement[]
+  comments      TaskComment[]
+}
+
+/// Role scopes an actor inside one event. Mirrors PRD section 7.
+/// owner | manager | team_lead | team_member | finance | vendor | sponsor | checkin
+model Membership {
+  id      String  @id @default(cuid())
+  userId  String
+  eventId String
+  role    String  @default("team_member")
+  teamId  String?
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  team  Team? @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, eventId])
+  @@index([eventId])
+}
+
+// ---------------------------------------------------------
+// Master event & phases
+// ---------------------------------------------------------
+
+model Event {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  type        String    @default("wedding")
+  category    String    @default("individual")
+  description String    @default("")
+  hostNames   String    @default("")
+  coverUrl    String?
+  logoUrl     String?
+  location    String    @default("")
+  timezone    String    @default("Pacific/Auckland")
+  currency    String    @default("NZD")
+  locale      String    @default("en-NZ")
+  privacy     String    @default("unlisted")
+  startDate   DateTime?
+  endDate     DateTime?
+  totalBudget Float     @default(0)
+  ownerId     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  owner         User            @relation("EventOwner", fields: [ownerId], references: [id])
+  phases        Phase[]
+  guests        Guest[]
+  groups        GuestGroup[]
+  teams         Team[]
+  tasks         Task[]
+  memberships   Membership[]
+  budgetLines   BudgetLine[]
+  invoices      Invoice[]
+  vendors       Vendor[]
+  polls         Poll[]
+  announcements Announcement[]
+  albums        Album[]
+  gifts         Gift[]
+  documents     EventDocument[]
+  notifications Notification[]
+}
+
+model Phase {
+  id              String    @id @default(cuid())
+  eventId         String
+  name            String
+  displayName     String    @default("")
+  description     String    @default("")
+  position        Int       @default(0)
+  date            DateTime?
+  startTime       String    @default("")
+  endTime         String    @default("")
+  venue           String    @default("")
+  address         String    @default("")
+  mapUrl          String    @default("")
+  dressCode       String    @default("")
+  capacity        Int       @default(0)
+  requiresRsvp    Boolean   @default(true)
+  requiresSeating Boolean   @default(false)
+  requiresMenu    Boolean   @default(false)
+  requiresTicket  Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+
+  event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  invites       PhaseInvite[]
+  scheduleItems ScheduleItem[]
+  menuCourses   MenuCourse[]
+  tables        SeatingTable[]
+  seatingRules  SeatingRule[]
+  tasks         Task[]
+  polls         Poll[]
+  albums        Album[]
+  ticketTypes   TicketType[]
+  invoices      Invoice[]
+  budgetLines   BudgetLine[]
+
+  @@index([eventId])
+}
+
+// ---------------------------------------------------------
+// People - guest CRM
+// ---------------------------------------------------------
+
+model GuestGroup {
+  id      String @id @default(cuid())
+  eventId String
+  name    String
+  colour  String @default("#ffffff")
+
+  event  Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guests Guest[]
+
+  @@index([eventId])
+}
+
+model Guest {
+  id            String   @id @default(cuid())
+  eventId       String
+  groupId       String?
+  name          String
+  email         String   @default("")
+  phone         String   @default("")
+  organisation  String   @default("")
+  relationship  String   @default("")
+  isVip         Boolean  @default(false)
+  isChild       Boolean  @default(false)
+  plusOnes      Int      @default(0)
+  dietary       String   @default("")
+  allergies     String   @default("")
+  accessibility String   @default("")
+  notes         String   @default("")
+  /// Opaque token powering personalised invitation + guest dashboard URLs.
+  accessToken   String   @unique @default(cuid())
+  createdAt     DateTime @default(now())
+
+  event      Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  group      GuestGroup?      @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  invites    PhaseInvite[]
+  selections MenuSelection[]
+  seats      SeatAssignment[]
+  votes      PollVote[]
+  gifts      Gift[]
+  tickets    Ticket[]
+  media      MediaItem[]
+
+  @@index([eventId])
+}
+
+/// One row per guest per phase - the multi-phase RSVP graph.
+/// status: invited | viewed | attending | declined | maybe | waitlisted
+model PhaseInvite {
+  id                  String    @id @default(cuid())
+  guestId             String
+  phaseId             String
+  status              String    @default("invited")
+  partySize           Int       @default(1)
+  adults              Int       @default(1)
+  children            Int       @default(0)
+  message             String    @default("")
+  transportNeeded     Boolean   @default(false)
+  accommodationNeeded Boolean   @default(false)
+  respondedAt         DateTime?
+  viewedAt            DateTime?
+  createdAt           DateTime  @default(now())
+
+  guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  phase Phase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+
+  @@unique([guestId, phaseId])
+  @@index([phaseId])
+}
+
+// ---------------------------------------------------------
+// Teams & tasks
+// ---------------------------------------------------------
+
+model Team {
+  id      String @id @default(cuid())
+  eventId String
+  name    String
+  colour  String @default("#ffffff")
+  brief   String @default("")
+
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+  memberships Membership[]
+  invoices    Invoice[]
+
+  @@index([eventId])
+}
+
+/// status: not_started | in_progress | blocked | awaiting_approval | completed
+model Task {
+  id          String    @id @default(cuid())
+  eventId     String
+  phaseId     String?
+  teamId      String?
+  ownerId     String?
+  title       String
+  detail      String    @default("")
+  status      String    @default("not_started")
+  priority    String    @default("medium")
+  dueDate     DateTime?
+  cost        Float     @default(0)
+  dependsOnId String?
+  position    Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  event     Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  phase     Phase?        @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+  team      Team?         @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  owner     User?         @relation("TaskOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  dependsOn Task?         @relation("TaskDeps", fields: [dependsOnId], references: [id], onDelete: SetNull)
+  blocking  Task[]        @relation("TaskDeps")
+  comments  TaskComment[]
+
+  @@index([eventId])
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------
+// Money - budget, invoices, vendors, gifts
+// ---------------------------------------------------------
+
+model BudgetLine {
+  id        String  @id @default(cuid())
+  eventId   String
+  phaseId   String?
+  category  String
+  budgeted  Float   @default(0)
+  committed Float   @default(0)
+  notes     String  @default("")
+
+  event    Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  phase    Phase?    @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+  invoices Invoice[]
+
+  @@index([eventId])
+}
+
+/// approval: draft | submitted | team_approved | manager_approved | finance_approved | rejected
+/// payment: unpaid | part_paid | paid
+model Invoice {
+  id            String    @id @default(cuid())
+  eventId       String
+  phaseId       String?
+  teamId        String?
+  vendorId      String?
+  budgetLineId  String?
+  number        String
+  description   String    @default("")
+  amount        Float     @default(0)
+  tax           Float     @default(0)
+  currency      String    @default("NZD")
+  issuedAt      DateTime  @default(now())
+  dueDate       DateTime?
+  approval      String    @default("submitted")
+  payment       String    @default("unpaid")
+  paidAmount    Float     @default(0)
+  attachmentUrl String?
+  createdAt     DateTime  @default(now())
+
+  event      Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  phase      Phase?      @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+  team       Team?       @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  vendor     Vendor?     @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  budgetLine BudgetLine? @relation(fields: [budgetLineId], references: [id], onDelete: SetNull)
+
+  @@index([eventId])
+}
+
+model Vendor {
+  id      String @id @default(cuid())
+  eventId String
+  name    String
+  type    String @default("other")
+  contact String @default("")
+  email   String @default("")
+  phone   String @default("")
+  notes   String @default("")
+  rating  Int    @default(0)
+
+  event    Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
+
+  @@index([eventId])
+}
+
+/// Monetary gifts. livent never stores card data - `providerRef` holds a
+/// tokenised reference from the payment provider (Stripe/Adyen). PRD 6.3.
+model Gift {
+  id          String   @id @default(cuid())
+  eventId     String
+  guestId     String?
+  fromName    String
+  amount      Float
+  currency    String   @default("NZD")
+  message     String   @default("")
+  anonymous   Boolean  @default(false)
+  showAmount  Boolean  @default(false)
+  kind        String   @default("cash")
+  status      String   @default("received")
+  providerRef String   @default("")
+  createdAt   DateTime @default(now())
+
+  event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest Guest? @relation(fields: [guestId], references: [id], onDelete: SetNull)
+
+  @@index([eventId])
+}
+
+// ---------------------------------------------------------
+// Experience - schedule, menu, seating, polls, comms, media
+// ---------------------------------------------------------
+
+model ScheduleItem {
+  id        String @id @default(cuid())
+  phaseId   String
+  title     String
+  detail    String @default("")
+  startTime String
+  endTime   String @default("")
+  location  String @default("")
+  ownerTeam String @default("")
+  status    String @default("upcoming")
+  position  Int    @default(0)
+
+  phase Phase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+
+  @@index([phaseId])
+}
+
+model MenuCourse {
+  id       String @id @default(cuid())
+  phaseId  String
+  name     String
+  position Int    @default(0)
+  /// 0 = informational only; >0 = guest must pick this many items.
+  choose   Int    @default(1)
+
+  phase Phase      @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  items MenuItem[]
+
+  @@index([phaseId])
+}
+
+model MenuItem {
+  id          String @id @default(cuid())
+  courseId    String
+  name        String
+  description String @default("")
+  dietary     String @default("")
+  allergens   String @default("")
+  position    Int    @default(0)
+
+  course     MenuCourse      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  selections MenuSelection[]
+}
+
+model MenuSelection {
+  id        String   @id @default(cuid())
+  guestId   String
+  itemId    String
+  createdAt DateTime @default(now())
+
+  guest Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  item  MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([guestId, itemId])
+}
+
+model SeatingTable {
+  id       String  @id @default(cuid())
+  phaseId  String
+  number   Int
+  name     String  @default("")
+  capacity Int     @default(10)
+  kind     String  @default("standard")
+  /// A locked table survives "Generate seating" untouched. PRD 6.4.
+  locked   Boolean @default(false)
+  x        Float   @default(0)
+  y        Float   @default(0)
+
+  phase Phase            @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  seats SeatAssignment[]
+
+  @@unique([phaseId, number])
+  @@index([phaseId])
+}
+
+model SeatAssignment {
+  id      String @id @default(cuid())
+  tableId String
+  guestId String
+  seatNo  Int    @default(0)
+
+  table SeatingTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  guest Guest        @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@unique([tableId, guestId])
+}
+
+/// kind: together | apart | vip | children
+/// `guestIds` is a comma-separated list (SQLite has no array type).
+model SeatingRule {
+  id       String @id @default(cuid())
+  phaseId  String
+  kind     String
+  guestIds String
+  weight   Int    @default(1)
+
+  phase Phase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+
+  @@index([phaseId])
+}
+
+model Poll {
+  id         String    @id @default(cuid())
+  eventId    String
+  phaseId    String?
+  question   String
+  kind       String    @default("single")
+  audience   String    @default("guests")
+  anonymous  Boolean   @default(true)
+  visibility String    @default("public")
+  closesAt   DateTime?
+  closed     Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  event   Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  phase   Phase?       @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+  options PollOption[]
+
+  @@index([eventId])
+}
+
+model PollOption {
+  id       String @id @default(cuid())
+  pollId   String
+  label    String
+  position Int    @default(0)
+
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes PollVote[]
+}
+
+model PollVote {
+  id        String   @id @default(cuid())
+  optionId  String
+  guestId   String
+  createdAt DateTime @default(now())
+
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  guest  Guest      @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@unique([optionId, guestId])
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  eventId   String
+  authorId  String
+  body      String
+  audience  String   @default("all_guests")
+  channels  String   @default("in_app")
+  urgent    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  event  Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}
+
+model Album {
+  id           String   @id @default(cuid())
+  eventId      String
+  phaseId      String?
+  name         String
+  coverUrl     String?
+  guestUploads Boolean  @default(true)
+  downloads    String   @default("guests")
+  createdAt    DateTime @default(now())
+
+  event Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  phase Phase?      @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+  items MediaItem[]
+
+  @@index([eventId])
+}
+
+model MediaItem {
+  id        String   @id @default(cuid())
+  albumId   String
+  guestId   String?
+  url       String
+  kind      String   @default("photo")
+  caption   String   @default("")
+  createdAt DateTime @default(now())
+
+  album Album  @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  guest Guest? @relation(fields: [guestId], references: [id], onDelete: SetNull)
+
+  @@index([albumId])
+}
+
+model EventDocument {
+  id         String   @id @default(cuid())
+  eventId    String
+  name       String
+  url        String
+  category   String   @default("general")
+  visibility String   @default("organisers")
+  createdAt  DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}
+
+// ---------------------------------------------------------
+// Ticketing (Phase 2, modelled now so check-in can build on it)
+// ---------------------------------------------------------
+
+model TicketType {
+  id       String @id @default(cuid())
+  phaseId  String
+  name     String
+  price    Float  @default(0)
+  currency String @default("NZD")
+  capacity Int    @default(0)
+  perks    String @default("")
+  position Int    @default(0)
+
+  phase   Phase    @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
+
+  @@index([phaseId])
+}
+
+model Ticket {
+  id           String    @id @default(cuid())
+  ticketTypeId String
+  guestId      String?
+  code         String    @unique @default(cuid())
+  status       String    @default("issued")
+  seatLabel    String    @default("")
+  checkedInAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  ticketType TicketType @relation(fields: [ticketTypeId], references: [id], onDelete: Cascade)
+  guest      Guest?     @relation(fields: [guestId], references: [id], onDelete: SetNull)
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  eventId   String
+  kind      String
+  title     String
+  body      String    @default("")
+  severity  String    @default("info")
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}

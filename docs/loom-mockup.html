@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loom — Product Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Source+Serif+4:ital,wght@0,400;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root{ --radius:1rem; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Poppins', sans-serif; background:#0b0b0c; color:#fff; min-height:100vh; overflow-x:hidden; }
+  em,.serif{ font-family:'Source Serif 4', serif; font-style:italic; }
+
+  .ambient{ position:fixed; inset:0; z-index:0; overflow:hidden; background:#0a0a0b; }
+  .blob{ position:absolute; border-radius:50%; filter:blur(100px); opacity:.3;
+    background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.5), rgba(255,255,255,0) 70%);
+    animation:drift 30s ease-in-out infinite; }
+  .blob.b1{width:46vw;height:46vw; top:-15%; left:-12%;}
+  .blob.b2{width:40vw;height:40vw; bottom:-18%; right:-8%; animation-delay:-10s; opacity:.2;}
+  .blob.b3{width:32vw;height:32vw; top:35%; left:55%; animation-delay:-18s; opacity:.15;}
+  @keyframes drift{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(5%,5%) scale(1.1);} }
+
+  .liquid-glass, .liquid-glass-strong{ position:relative; overflow:hidden; border:none; border-radius:var(--radius); }
+  .liquid-glass{ background:rgba(255,255,255,0.03); backdrop-filter:blur(6px); box-shadow:inset 0 1px 1px rgba(255,255,255,0.1); }
+  .liquid-glass-strong{ background:rgba(255,255,255,0.045); backdrop-filter:blur(34px); box-shadow:4px 4px 4px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.15); }
+  .liquid-glass::before, .liquid-glass-strong::before{
+    content:""; position:absolute; inset:0; border-radius:inherit; padding:1.4px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 20%, transparent 40%, transparent 60%, rgba(255,255,255,0.15) 80%, rgba(255,255,255,0.45) 100%);
+    -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none;
+  }
+  .liquid-glass-strong::before{ background:linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 20%, transparent 40%, transparent 60%, rgba(255,255,255,0.2) 80%, rgba(255,255,255,0.5) 100%); }
+
+  .app{ position:relative; z-index:1; display:flex; min-height:100vh; }
+
+  /* sidebar */
+  .sidebar{ width:250px; flex-shrink:0; padding:20px 14px; display:flex; flex-direction:column; gap:16px; position:sticky; top:0; height:100vh; }
+  .brand{ display:flex; align-items:center; gap:10px; padding:8px 10px 18px; }
+  .brand .mark{ width:30px; height:30px; border-radius:9px; background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:.9rem; }
+  .brand span{ font-size:1.15rem; font-weight:600; letter-spacing:-0.02em; }
+  .event-switch{ padding:12px 14px; border-radius:14px; margin-bottom:6px; }
+  .event-switch .label{ font-size:.62rem; text-transform:uppercase; letter-spacing:.12em; color:rgba(255,255,255,.45); margin-bottom:4px; }
+  .event-switch .name{ font-size:.88rem; font-weight:500; }
+  nav.tabs{ display:flex; flex-direction:column; gap:2px; flex:1; overflow-y:auto; padding:4px; border-radius:16px; }
+  nav.tabs button{
+    all:unset; cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:11px;
+    font-size:.83rem; color:rgba(255,255,255,.6); transition:.15s;
+  }
+  nav.tabs button .ic{ width:16px; height:16px; flex-shrink:0; opacity:.7; }
+  nav.tabs button:hover{ background:rgba(255,255,255,.05); color:#fff; }
+  nav.tabs button.active{ background:rgba(255,255,255,.09); color:#fff; }
+  .sidebar .foot{ padding:12px 14px; border-radius:14px; font-size:.72rem; color:rgba(255,255,255,.45); }
+
+  /* main */
+  main{ flex:1; padding:26px 34px 60px; max-width:1200px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:26px; }
+  .topbar h1{ font-size:1.6rem; font-weight:500; letter-spacing:-0.02em; }
+  .topbar .sub{ font-size:.8rem; color:rgba(255,255,255,.5); margin-top:2px; }
+  .topbar-actions{ display:flex; gap:10px; }
+  .btn{ all:unset; cursor:pointer; padding:10px 18px; border-radius:999px; font-size:.8rem; color:#fff; transition:.15s; display:inline-flex; align-items:center; gap:8px; }
+  .btn:hover{ transform:scale(1.04); }
+  .btn.ghost{ color:rgba(255,255,255,.7); }
+
+  .screen{ display:none; animation:fade .25s ease; }
+  .screen.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  .grid4{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  .grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media(max-width:1050px){ .grid4{grid-template-columns:repeat(2,1fr);} .grid3{grid-template-columns:1fr 1fr;} }
+
+  .card{ padding:22px; border-radius:1.1rem; }
+  .stat-label{ font-size:.7rem; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.45); margin-bottom:10px; }
+  .stat-value{ font-size:2rem; font-weight:500; letter-spacing:-0.02em; }
+  .stat-sub{ font-size:.76rem; color:rgba(255,255,255,.5); margin-top:6px; }
+  .bar{ height:6px; border-radius:6px; background:rgba(255,255,255,.08); margin-top:12px; overflow:hidden; }
+  .bar > div{ height:100%; background:rgba(255,255,255,.55); border-radius:6px; }
+
+  h2.h{ font-size:1.05rem; font-weight:500; margin-bottom:14px; letter-spacing:-0.01em; }
+  .pill{ padding:5px 12px; border-radius:999px; font-size:.68rem; color:rgba(255,255,255,.75); display:inline-block; }
+  .pill.solid{ background:rgba(255,255,255,.12); }
+
+  /* phase timeline */
+  .phase-rail{ display:flex; gap:14px; overflow-x:auto; padding:6px 2px 18px; }
+  .phase-chip{ flex-shrink:0; padding:16px 20px; border-radius:1rem; min-width:150px; cursor:pointer; transition:.15s; }
+  .phase-chip:hover{ transform:translateY(-2px); }
+  .phase-chip.on{ background:rgba(255,255,255,.09); }
+  .phase-chip .name{ font-weight:500; font-size:.92rem; margin-bottom:4px; }
+  .phase-chip .date{ font-size:.72rem; color:rgba(255,255,255,.5); }
+  .phase-chip .rsvp{ font-size:.68rem; color:rgba(255,255,255,.45); margin-top:8px; }
+
+  table.mock{ width:100%; border-collapse:collapse; font-size:.84rem; }
+  table.mock th{ text-align:left; color:rgba(255,255,255,.45); font-weight:500; font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.1); }
+  table.mock td{ padding:12px; color:rgba(255,255,255,.78); border-bottom:1px solid rgba(255,255,255,.05); }
+  .status-dot{ width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:7px; }
+  .status-dot.yes{ background:#9fe3a8; } .status-dot.maybe{ background:#f0d27a; } .status-dot.no{ background:#e39a9a; } .status-dot.pending{ background:rgba(255,255,255,.3); }
+
+  /* seating */
+  .seat-toolbar{ display:flex; gap:12px; align-items:center; margin-bottom:18px; flex-wrap:wrap; }
+  .seat-toolbar input{ all:unset; padding:9px 14px; border-radius:10px; background:rgba(255,255,255,.06); font-size:.8rem; width:70px; text-align:center; }
+  .tables-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; }
+  .table-card{ padding:16px; border-radius:1rem; text-align:center; }
+  .table-card .tno{ font-size:.7rem; color:rgba(255,255,255,.45); text-transform:uppercase; letter-spacing:.08em; }
+  .table-card .seats{ font-size:.78rem; color:rgba(255,255,255,.7); margin-top:8px; line-height:1.5; min-height:52px; }
+  .table-card .fill{ font-size:.68rem; color:rgba(255,255,255,.4); margin-top:8px; }
+
+  /* menu */
+  .menu-course{ margin-bottom:18px; }
+  .menu-course h4{ font-size:.85rem; font-weight:500; margin-bottom:8px; color:rgba(255,255,255,.85); }
+  .menu-item{ display:flex; justify-content:space-between; align-items:center; padding:11px 14px; border-radius:.8rem; margin-bottom:6px; font-size:.85rem; }
+  .menu-item .dietary{ font-size:.68rem; color:rgba(255,255,255,.45); }
+  .choice{ width:18px; height:18px; border-radius:50%; border:1.5px solid rgba(255,255,255,.35); flex-shrink:0; cursor:pointer; }
+  .choice.picked{ background:#fff; border-color:#fff; }
+
+  /* tasks kanban */
+  .kanban{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .kcol{ padding:16px; border-radius:1.1rem; min-height:260px; }
+  .kcol h4{ font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.5); margin-bottom:12px; }
+  .task{ padding:13px 14px; border-radius:.85rem; margin-bottom:10px; }
+  .task .t{ font-size:.83rem; margin-bottom:6px; }
+  .task .meta{ display:flex; justify-content:space-between; font-size:.68rem; color:rgba(255,255,255,.45); }
+
+  /* budget */
+  .budget-row{ display:grid; grid-template-columns:140px 1fr 90px; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+  .budget-row:last-child{ border-bottom:none; }
+  .budget-row .cat{ font-size:.85rem; }
+  .budget-row .amt{ font-size:.78rem; color:rgba(255,255,255,.55); text-align:right; }
+
+  /* polls */
+  .poll-opt{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-radius:.9rem; margin-bottom:8px; cursor:pointer; font-size:.85rem; }
+  .poll-opt .pct{ color:rgba(255,255,255,.5); font-size:.78rem; }
+  .feed-item{ display:flex; gap:12px; padding:14px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+  .feed-item:last-child{ border-bottom:none; }
+  .feed-dot{ width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.1); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:.7rem; font-weight:500; }
+  .feed-item .txt{ font-size:.83rem; color:rgba(255,255,255,.75); }
+  .feed-item .time{ font-size:.68rem; color:rgba(255,255,255,.4); margin-top:3px; }
+
+  /* media */
+  .gallery{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .ph{ aspect-ratio:1; border-radius:.9rem; background:linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.03)); display:flex; align-items:end; padding:10px; font-size:.65rem; color:rgba(255,255,255,.5); }
+
+  /* ticketing */
+  .tkt-card{ padding:24px; border-radius:1.2rem; }
+  .tkt-card .price{ font-size:1.8rem; font-weight:500; margin:10px 0; }
+  .tkt-card ul{ list-style:none; font-size:.78rem; color:rgba(255,255,255,.6); line-height:2; margin-bottom:16px; }
+
+  footer.note{ text-align:center; padding:30px 0 10px; font-size:.72rem; color:rgba(255,255,255,.35); }
+
+  @media(max-width:900px){
+    .sidebar{ display:none; }
+    main{ padding:24px 18px 60px; }
+    .grid4,.grid3,.grid2,.kanban,.gallery{ grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+
+<div class="app">
+  <div class="sidebar liquid-glass-strong">
+    <div class="brand"><div class="mark">L</div><span>Loom</span></div>
+    <div class="event-switch liquid-glass">
+      <div class="label">Master Event</div>
+      <div class="name">Sarah &amp; John's Wedding</div>
+    </div>
+    <nav class="tabs">
+      <button class="tab-btn active" data-target="dashboard">Command Centre</button>
+      <button class="tab-btn" data-target="phases">Phases</button>
+      <button class="tab-btn" data-target="guests">Guests &amp; RSVP</button>
+      <button class="tab-btn" data-target="seating">Seating</button>
+      <button class="tab-btn" data-target="menu">Menu</button>
+      <button class="tab-btn" data-target="tasks">Tasks &amp; Teams</button>
+      <button class="tab-btn" data-target="budget">Budget &amp; Invoices</button>
+      <button class="tab-btn" data-target="comms">Polls &amp; Comms</button>
+      <button class="tab-btn" data-target="media">Photos &amp; Video</button>
+      <button class="tab-btn" data-target="tickets">Ticketing</button>
+    </nav>
+    <div class="foot liquid-glass">12 Dec 2026 · Auckland → Mumbai</div>
+  </div>
+
+  <main>
+
+    <!-- COMMAND CENTRE -->
+    <section class="screen active" id="dashboard">
+      <div class="topbar">
+        <div><h1>Event Command Centre</h1><div class="sub">Health across all 5 phases</div></div>
+        <div class="topbar-actions"><button class="btn ghost liquid-glass">Export report</button><button class="btn liquid-glass-strong">+ New phase</button></div>
+      </div>
+      <div class="grid4" style="margin-bottom:16px;">
+        <div class="card liquid-glass"><div class="stat-label">Guests</div><div class="stat-value">1,284</div><div class="stat-sub">1,041 attending · 89 pending</div></div>
+        <div class="card liquid-glass"><div class="stat-label">RSVP rate</div><div class="stat-value">81%</div><div class="bar"><div style="width:81%"></div></div></div>
+        <div class="card liquid-glass"><div class="stat-label">Budget</div><div class="stat-value">$182K</div><div class="stat-sub">$143K committed · $97K paid</div></div>
+        <div class="card liquid-glass"><div class="stat-label">Tasks</div><div class="stat-value">172<span style="font-size:1rem;color:rgba(255,255,255,.4);"> / 218</span></div><div class="stat-sub">23 overdue</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card liquid-glass">
+          <h2 class="h">Needs attention</h2>
+          <div class="feed-item"><div class="feed-dot">!</div><div><div class="txt">43 guests haven't RSVP'd — catering confirmation due tomorrow</div><div class="time">Sangeet · Mehendi</div></div></div>
+          <div class="feed-item"><div class="feed-dot">!</div><div><div class="txt">Table 17 has 12 guests seated against a capacity of 10</div><div class="time">Reception</div></div></div>
+          <div class="feed-item"><div class="feed-dot">!</div><div><div class="txt">Photography invoice is 3 days overdue for approval</div><div class="time">Finance</div></div></div>
+        </div>
+        <div class="card liquid-glass">
+          <h2 class="h">Menu split</h2>
+          <div class="stat-sub" style="margin-bottom:10px;">Reception · 640 confirmed</div>
+          <div style="font-size:.82rem;margin-bottom:6px;">Non-vegetarian — 55%</div><div class="bar"><div style="width:55%"></div></div>
+          <div style="font-size:.82rem;margin:12px 0 6px;">Vegetarian — 32%</div><div class="bar"><div style="width:32%"></div></div>
+          <div style="font-size:.82rem;margin:12px 0 6px;">Vegan / other — 13%</div><div class="bar"><div style="width:13%"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASES -->
+    <section class="screen" id="phases">
+      <div class="topbar"><div><h1>Phases</h1><div class="sub">One master event, five connected celebrations</div></div><button class="btn liquid-glass-strong">+ Add phase</button></div>
+      <div class="phase-rail">
+        <div class="phase-chip liquid-glass on"><div class="name">Engagement</div><div class="date">8 Nov 2026 · Home</div><div class="rsvp">96% RSVP</div></div>
+        <div class="phase-chip liquid-glass"><div class="name">Mehendi</div><div class="date">10 Dec · Garden Venue</div><div class="rsvp">88% RSVP</div></div>
+        <div class="phase-chip liquid-glass"><div class="name">Sangeet</div><div class="date">11 Dec · Grand Hall</div><div class="rsvp">84% RSVP</div></div>
+        <div class="phase-chip liquid-glass"><div class="name">Ceremony</div><div class="date">12 Dec · Temple</div><div class="rsvp">91% RSVP</div></div>
+        <div class="phase-chip liquid-glass"><div class="name">Reception</div><div class="date">12 Dec · Riverside Hotel</div><div class="rsvp">79% RSVP</div></div>
+      </div>
+      <div class="card liquid-glass">
+        <h2 class="h">Reception — overview</h2>
+        <div class="grid3">
+          <div><div class="stat-label">Guests invited</div><div class="stat-value" style="font-size:1.4rem;">820</div></div>
+          <div><div class="stat-label">Tables</div><div class="stat-value" style="font-size:1.4rem;">64</div></div>
+          <div><div class="stat-label">Dress code</div><div class="stat-value" style="font-size:1.4rem;">Black tie</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GUESTS -->
+    <section class="screen" id="guests">
+      <div class="topbar"><div><h1>Guests &amp; RSVP</h1><div class="sub">1,284 guests across 5 phases</div></div><button class="btn liquid-glass-strong">Send reminder</button></div>
+      <div class="card liquid-glass">
+        <table class="mock">
+          <tr><th>Guest</th><th>Group</th><th>Engagement</th><th>Mehendi</th><th>Sangeet</th><th>Ceremony</th><th>Reception</th></tr>
+          <tr><td>Priya Nair</td><td>Bride's family</td><td><span class="status-dot yes"></span>Yes</td><td><span class="status-dot yes"></span>Yes</td><td><span class="status-dot yes"></span>Yes</td><td><span class="status-dot yes"></span>Yes</td><td><span class="status-dot yes"></span>Yes</td></tr>
+          <tr><td>Michael Chen</td><td>Groom's colleagues</td><td><span class="status-dot no"></span>No</td><td><span class="status-dot no"></span>No</td><td><span class="status-dot maybe"></span>Maybe</td><td><span class="status-dot yes"></span>Yes</td><td><span class="status-dot yes"></span>Yes</td></tr>
+          <tr><td>Anjali &amp; Rohan Mehta</td><td>Friends</td><td><span class="status-dot pending"></span>Pending</td><td><span class="status-dot yes"></span>Yes</td><td><span class="status-dot yes"></span>Yes</td><td><span class="status-dot yes"></span>Yes</td><td><span class="status-dot yes"></span>Yes</td></tr>
+          <tr><td>David Osei</td><td>Work colleagues</td><td><span class="status-dot pending"></span>Pending</td><td><span class="status-dot pending"></span>Pending</td><td><span class="status-dot pending"></span>Pending</td><td><span class="status-dot maybe"></span>Maybe</td><td><span class="status-dot yes"></span>Yes</td></tr>
+          <tr><td>The Wilson Family</td><td>VIP</td><td><span class="status-dot yes"></span>Yes</td><td><span class="status-dot yes"></span>Yes</td><td><span class="status-dot yes"></span>Yes</td><td><span class="status-dot yes"></span>Yes</td><td><span class="status-dot yes"></span>Yes</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEATING -->
+    <section class="screen" id="seating">
+      <div class="topbar"><div><h1>Seating — Reception</h1><div class="sub">640 confirmed guests</div></div></div>
+      <div class="card liquid-glass" style="margin-bottom:18px;">
+        <div class="seat-toolbar">
+          <span style="font-size:.8rem;color:rgba(255,255,255,.6);">Tables</span><input id="tblCount" value="12">
+          <span style="font-size:.8rem;color:rgba(255,255,255,.6);">Seats / table</span><input id="seatCount" value="10">
+          <button class="btn liquid-glass-strong" onclick="generateSeating()">Generate seating</button>
+          <span id="seatMsg" style="font-size:.75rem;color:rgba(255,255,255,.45);"></span>
+        </div>
+        <div class="tables-grid" id="tablesGrid"></div>
+      </div>
+    </section>
+
+    <!-- MENU -->
+    <section class="screen" id="menu">
+      <div class="topbar"><div><h1>Menu — Sangeet Dinner</h1><div class="sub">Your selections, per guest</div></div></div>
+      <div class="grid2">
+        <div class="card liquid-glass">
+          <div class="menu-course">
+            <h4>Starter</h4>
+            <div class="menu-item liquid-glass"><div><div>Paneer Tikka</div><div class="dietary">Vegetarian</div></div><div class="choice picked" onclick="pick(this)"></div></div>
+            <div class="menu-item liquid-glass"><div><div>Chicken Skewers</div><div class="dietary">Contains gluten</div></div><div class="choice" onclick="pick(this)"></div></div>
+          </div>
+          <div class="menu-course">
+            <h4>Main</h4>
+            <div class="menu-item liquid-glass"><div><div>Vegetable Biryani</div><div class="dietary">Vegan available</div></div><div class="choice" onclick="pick(this)"></div></div>
+            <div class="menu-item liquid-glass"><div><div>Lamb Rogan Josh</div><div class="dietary">—</div></div><div class="choice picked" onclick="pick(this)"></div></div>
+          </div>
+          <div class="menu-course">
+            <h4>Dessert</h4>
+            <div class="menu-item liquid-glass"><div><div>Gulab Jamun</div><div class="dietary">Contains dairy</div></div><div class="choice picked" onclick="pick(this)"></div></div>
+          </div>
+        </div>
+        <div class="card liquid-glass">
+          <h2 class="h">Caterer live count</h2>
+          <div style="font-size:.85rem;margin-bottom:8px;">Chicken — 86</div><div class="bar"><div style="width:38%"></div></div>
+          <div style="font-size:.85rem;margin:14px 0 8px;">Vegetarian — 104</div><div class="bar"><div style="width:52%"></div></div>
+          <div style="font-size:.85rem;margin:14px 0 8px;">Vegan — 21</div><div class="bar"><div style="width:12%"></div></div>
+          <div style="font-size:.85rem;margin:14px 0 8px;">Gluten-free — 13</div><div class="bar"><div style="width:8%"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TASKS -->
+    <section class="screen" id="tasks">
+      <div class="topbar"><div><h1>Tasks &amp; Teams</h1><div class="sub">218 tasks · 8 teams</div></div><button class="btn liquid-glass-strong">+ New task</button></div>
+      <div class="kanban">
+        <div class="kcol liquid-glass">
+          <h4>Not started</h4>
+          <div class="task liquid-glass"><div class="t">Confirm florist final order</div><div class="meta"><span>Decoration</span><span>Due 2 Dec</span></div></div>
+          <div class="task liquid-glass"><div class="t">Print table place cards</div><div class="meta"><span>Stationery</span><span>Due 5 Dec</span></div></div>
+        </div>
+        <div class="kcol liquid-glass">
+          <h4>In progress</h4>
+          <div class="task liquid-glass"><div class="t">Finalise catering headcount</div><div class="meta"><span>Catering</span><span>Due 28 Nov</span></div></div>
+          <div class="task liquid-glass"><div class="t">Confirm shuttle bus timetable</div><div class="meta"><span>Transport</span><span>Due 1 Dec</span></div></div>
+          <div class="task liquid-glass"><div class="t">Build ceremony photo shot list</div><div class="meta"><span>Photography</span><span>Due 3 Dec</span></div></div>
+        </div>
+        <div class="kcol liquid-glass">
+          <h4>Completed</h4>
+          <div class="task liquid-glass"><div class="t">Book venue &amp; sign contract</div><div class="meta"><span>Venue</span><span>Done</span></div></div>
+          <div class="task liquid-glass"><div class="t">Send save-the-dates</div><div class="meta"><span>Invitations</span><span>Done</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BUDGET -->
+    <section class="screen" id="budget">
+      <div class="topbar"><div><h1>Budget &amp; Invoices</h1><div class="sub">$182,000 total budget</div></div><button class="btn liquid-glass-strong">+ Submit invoice</button></div>
+      <div class="card liquid-glass">
+        <div class="budget-row"><div class="cat">Venue</div><div class="bar"><div style="width:92%"></div></div><div class="amt">$46,000</div></div>
+        <div class="budget-row"><div class="cat">Catering</div><div class="bar"><div style="width:94%"></div></div><div class="amt">$25,000</div></div>
+        <div class="budget-row"><div class="cat">Decoration</div><div class="bar"><div style="width:60%"></div></div><div class="amt">$18,000</div></div>
+        <div class="budget-row"><div class="cat">Photography</div><div class="bar"><div style="width:100%"></div></div><div class="amt">$14,000</div></div>
+        <div class="budget-row"><div class="cat">Entertainment</div><div class="bar"><div style="width:40%"></div></div><div class="amt">$12,000</div></div>
+        <div class="budget-row"><div class="cat">Transport</div><div class="bar"><div style="width:30%"></div></div><div class="amt">$9,000</div></div>
+      </div>
+    </section>
+
+    <!-- COMMS -->
+    <section class="screen" id="comms">
+      <div class="topbar"><div><h1>Polls &amp; Communication</h1><div class="sub">Reception · all guests</div></div></div>
+      <div class="grid2">
+        <div class="card liquid-glass">
+          <h2 class="h">Which first-dance song?</h2>
+          <div class="poll-opt liquid-glass"><span>Perfect — Ed Sheeran</span><span class="pct">48%</span></div>
+          <div class="poll-opt liquid-glass"><span>All of Me — John Legend</span><span class="pct">31%</span></div>
+          <div class="poll-opt liquid-glass"><span>A Thousand Years — Christina Perri</span><span class="pct">21%</span></div>
+        </div>
+        <div class="card liquid-glass">
+          <h2 class="h">Announcements</h2>
+          <div class="feed-item"><div class="feed-dot">JS</div><div><div class="txt">Reception venue entrance changed — please use Entrance B.</div><div class="time">2 hours ago · All guests</div></div></div>
+          <div class="feed-item"><div class="feed-dot">JS</div><div><div class="txt">Shuttle buses depart the hotel lobby from 5:30 PM.</div><div class="time">Yesterday · All guests</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEDIA -->
+    <section class="screen" id="media">
+      <div class="topbar"><div><h1>Photos &amp; Video</h1><div class="sub">Branded gallery · downloads enabled after reception</div></div><button class="btn liquid-glass-strong">Upload</button></div>
+      <div class="gallery">
+        <div class="ph liquid-glass">Engagement · 214 photos</div>
+        <div class="ph liquid-glass">Mehendi · 96 photos</div>
+        <div class="ph liquid-glass">Sangeet · 340 photos</div>
+        <div class="ph liquid-glass">Ceremony · 512 photos</div>
+        <div class="ph liquid-glass">Reception · 88 photos</div>
+        <div class="ph liquid-glass">Guest uploads · 1,204</div>
+        <div class="ph liquid-glass">Behind the scenes · 42</div>
+        <div class="ph liquid-glass">+ New album</div>
+      </div>
+    </section>
+
+    <!-- TICKETS -->
+    <section class="screen" id="tickets">
+      <div class="topbar"><div><h1>Ticketing <span class="pill solid" style="margin-left:8px;">Premium</span></h1><div class="sub">Reception — capacity 820</div></div><button class="btn liquid-glass-strong">+ Ticket type</button></div>
+      <div class="grid3">
+        <div class="tkt-card liquid-glass"><div class="pill solid">General</div><div class="price">$0</div><ul><li>Standard entry</li><li>Assigned table</li><li>620 sold / 700</li></ul><div class="bar"><div style="width:88%"></div></div></div>
+        <div class="tkt-card liquid-glass"><div class="pill solid">VIP</div><div class="price">$150</div><ul><li>Front-row seating</li><li>Welcome gift</li><li>92 sold / 100</li></ul><div class="bar"><div style="width:92%"></div></div></div>
+        <div class="tkt-card liquid-glass"><div class="pill solid">Family (4)</div><div class="price">$400</div><ul><li>Table of 4</li><li>Kids' menu included</li><li>18 sold / 20</li></ul><div class="bar"><div style="width:90%"></div></div></div>
+      </div>
+      <div class="card liquid-glass" style="margin-top:16px;">
+        <h2 class="h">Check-in</h2>
+        <div class="grid3">
+          <div><div class="stat-label">Registered</div><div class="stat-value" style="font-size:1.4rem;">730</div></div>
+          <div><div class="stat-label">Checked in</div><div class="stat-value" style="font-size:1.4rem;">512</div></div>
+          <div><div class="stat-label">No-show</div><div class="stat-value" style="font-size:1.4rem;">—</div></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="note">Loom interactive mockup · illustrative data · not connected to a live event</footer>
+  </main>
+</div>
+
+<script>
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.target).classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.phase-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      document.querySelectorAll('.phase-chip').forEach(c=>c.classList.remove('on'));
+      chip.classList.add('on');
+    });
+  });
+
+  function pick(el){
+    const group = el.closest('.menu-course');
+    group.querySelectorAll('.choice').forEach(c=>c.classList.remove('picked'));
+    el.classList.add('picked');
+  }
+
+  const names = ["Priya","Rohan","Anjali","Michael","David","Wilson Fam.","Chen Party","Nair Group","Osei +1","Kavya","Arjun","Sophie","Liam","Meera","Tom","Isla","Neha","Raj","Ella","Noah"];
+  function generateSeating(){
+    const tableCount = Math.max(1, parseInt(document.getElementById('tblCount').value) || 12);
+    const seatCount = Math.max(1, parseInt(document.getElementById('seatCount').value) || 10);
+    const grid = document.getElementById('tablesGrid');
+    grid.innerHTML = '';
+    let pool = [];
+    for(let i=0;i<tableCount*seatCount;i++){ pool.push(names[i % names.length] + (i>=names.length ? ' '+(Math.floor(i/names.length)+1) : '')); }
+    pool = pool.sort(()=>Math.random()-0.5);
+    for(let t=1;t<=tableCount;t++){
+      const seated = pool.splice(0, seatCount);
+      const div = document.createElement('div');
+      div.className = 'table-card liquid-glass';
+      div.innerHTML = '<div class="tno">Table '+t+'</div><div class="seats">'+seated.slice(0,6).join(', ')+(seated.length>6 ? ' +'+(seated.length-6):'')+'</div><div class="fill">'+seated.length+' / '+seatCount+' seats</div>';
+      grid.appendChild(div);
+    }
+    document.getElementById('seatMsg').textContent = 'Generated '+tableCount+' tables just now.';
+  }
+  generateSeating();
+</script>
+</body>
+</html>
