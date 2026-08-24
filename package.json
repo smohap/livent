@@ -28,10 +28,10 @@
   },
   "allowScripts": {
     "@prisma/client@6.19.3": true,
-    "@prisma/engines@6.19.3": true,
     "esbuild@0.28.2": true,
-    "prisma@6.19.3": true,
-    "esbuild@0.25.12": true
+    "esbuild@0.25.12": true,
+    "prisma@7.9.1": true,
+    "@prisma/engines@7.9.1": true
   },
   "main": "apps/api/dist/index.js"
 }

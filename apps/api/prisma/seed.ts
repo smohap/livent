@@ -4,10 +4,14 @@
  *
  * Safe to re-run: it wipes and rebuilds the demo event only.
  */
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
+// Prisma 7 connects through a driver adapter rather than a native engine.
+const prisma = new PrismaClient({
+  adapter: new PrismaMariaDb(process.env.DATABASE_URL ?? ''),
+});
 
 const DEMO_SLUG = 'sarah-and-john';
 

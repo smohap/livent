@@ -4,14 +4,21 @@
 
 generator client {
   provider = "prisma-client-js"
-  // Built on Windows, deployed to Hostinger (CloudLinux, a RHEL derivative).
-  // The extra targets keep one build artifact portable across both.
-  binaryTargets = ["native", "rhel-openssl-3.0.x", "rhel-openssl-1.1.x", "debian-openssl-3.0.x"]
 }
 
+/*
+ * Prisma 7 has no Rust query engine: queries are compiled in TypeScript and
+ * executed through a driver adapter. That matters here because the Rust engine
+ * panicked ("timer has gone away") on Hostinger's shared tier, which is a
+ * process-constrained CloudLinux environment. The MariaDB adapter is plain JS,
+ * so there is no native engine left to fail.
+ *
+ * The connection URL lives in prisma.config.ts (for the CLI) and is passed to
+ * the PrismaClient constructor via the adapter (for runtime). Prisma 7 no
+ * longer accepts `url` here.
+ */
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 // ---------------------------------------------------------
