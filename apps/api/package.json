@@ -1,5 +1,5 @@
 {
-  "name": "@livent/api",
+  "name": "@evyent/api",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -7,12 +7,13 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "prisma generate && tsc -p tsconfig.json",
-    "start": "node dist/index.js",
+    "start": "prisma migrate deploy && node dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "db:push": "prisma db push --skip-generate && prisma generate",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "test": "tsx --test test/*.test.ts"
+    "test": "tsx --test test/*.test.ts",
+    "migrate:dev": "prisma migrate dev"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -23,6 +24,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.6.2",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "zod": "^3.24.1"

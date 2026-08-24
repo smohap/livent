@@ -1,5 +1,5 @@
 /**
- * livent seating engine (PRD section 6.4).
+ * Evyent seating engine (PRD section 6.4).
  *
  * Takes confirmed guests, table geometry and organiser rules, and produces a
  * table allocation in one pass. Design goals, in priority order:

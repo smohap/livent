@@ -172,7 +172,7 @@ export function GuestPortal({ invitation = false }: { invitation?: boolean }) {
         <GuestExtras portal={data} token={token!} />
 
         <footer className="mt-14 text-center text-[0.68rem] uppercase tracking-[0.2em] text-white/25">
-          Powered by livent
+          Powered by Evyent
         </footer>
       </main>
     </>
@@ -366,7 +366,7 @@ function GiftPanel({ portal, token }: { portal: Portal; token: string }) {
       <Panel>
         <p className="text-sm leading-relaxed text-white/60">
           A monetary gift to {portal.event.hostNames || 'your hosts'}. Payment is handled by a
-          licensed provider; livent never sees your card details.
+          licensed provider; Evyent never sees your card details.
         </p>
 
         <div className="mt-5 flex flex-wrap gap-2">

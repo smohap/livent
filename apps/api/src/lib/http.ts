@@ -49,7 +49,7 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
   }
   const message = err instanceof Error ? err.message : 'Unexpected error';
   if (process.env.NODE_ENV !== 'test') {
-    console.error('[livent:api]', err);
+    console.error('[evyent:api]', err);
   }
   res.status(500).json({ error: message });
 }

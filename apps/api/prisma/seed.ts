@@ -1,5 +1,5 @@
 /**
- * Seeds the demo event from the livent mockup: a five-phase Indian wedding
+ * Seeds the demo event from the Evyent mockup: a five-phase Indian wedding
  * with a real guest list, RSVP spread, menu, tables, tasks, budget and media.
  *
  * Safe to re-run: it wipes and rebuilds the demo event only.
@@ -36,8 +36,31 @@ const rand = rng(20261212);
 const pick = <T>(items: T[]): T => items[Math.floor(rand() * items.length)]!;
 const day = (base: Date, offset: number) => new Date(base.getTime() + offset * 86_400_000);
 
+/**
+ * The seed deletes and recreates the demo event and creates accounts with a
+ * known password. That is fine locally and dangerous anywhere else, so a
+ * non-local DATABASE_URL requires an explicit SEED_CONFIRM=yes.
+ */
+function assertSafeTarget(): void {
+  const url = process.env.DATABASE_URL ?? '';
+  const isLocal =
+    url.startsWith('file:') || url.includes('@localhost') || url.includes('@127.0.0.1');
+
+  if (isLocal || process.env.SEED_CONFIRM === 'yes') return;
+
+  const host = url.replace(/^\w+:\/\/[^@]*@/, '').split('/')[0] ?? 'unknown host';
+  throw new Error(
+    [
+      `Refusing to seed a non-local database (${host}).`,
+      'This wipes the demo event and creates accounts with a known password.',
+      'Re-run with SEED_CONFIRM=yes if that is genuinely what you want.',
+    ].join(' '),
+  );
+}
+
 async function main() {
-  console.log('Seeding livent demo data...');
+  assertSafeTarget();
+  console.log('Seeding Evyent demo data...');
 
   const existing = await prisma.event.findUnique({ where: { slug: DEMO_SLUG } });
   if (existing) {
@@ -45,28 +68,28 @@ async function main() {
     console.log('  removed previous demo event');
   }
 
-  const passwordHash = await bcrypt.hash('livent2026', 12);
+  const passwordHash = await bcrypt.hash('evyent2026', 12);
 
   const [organiser, manager, finance, catering] = await Promise.all([
     prisma.user.upsert({
-      where: { email: 'sarah@livent.app' },
+      where: { email: 'sarah@evyent.com' },
       update: {},
-      create: { email: 'sarah@livent.app', name: 'Sarah Whitfield', passwordHash },
+      create: { email: 'sarah@evyent.com', name: 'Sarah Whitfield', passwordHash },
     }),
     prisma.user.upsert({
-      where: { email: 'manager@livent.app' },
+      where: { email: 'manager@evyent.com' },
       update: {},
-      create: { email: 'manager@livent.app', name: 'Ravi Deshmukh', passwordHash },
+      create: { email: 'manager@evyent.com', name: 'Ravi Deshmukh', passwordHash },
     }),
     prisma.user.upsert({
-      where: { email: 'finance@livent.app' },
+      where: { email: 'finance@evyent.com' },
       update: {},
-      create: { email: 'finance@livent.app', name: 'Tui Harrison', passwordHash },
+      create: { email: 'finance@evyent.com', name: 'Tui Harrison', passwordHash },
     }),
     prisma.user.upsert({
-      where: { email: 'catering@livent.app' },
+      where: { email: 'catering@evyent.com' },
       update: {},
-      create: { email: 'catering@livent.app', name: 'Marco Bellini', passwordHash },
+      create: { email: 'catering@evyent.com', name: 'Marco Bellini', passwordHash },
     }),
   ]);
 
@@ -135,7 +158,7 @@ async function main() {
   await seedPeople(event.id, phases);
   await seedWork(event.id, phases, manager.id, catering.id);
   await seedExperience(event.id, phases, organiser.id);
-  console.log('Done. Sign in as sarah@livent.app / livent2026');
+  console.log('Done. Sign in as sarah@evyent.com / evyent2026');
 }
 
 type PhaseRow = { id: string; name: string; requiresSeating: boolean; requiresMenu: boolean };

@@ -1,4 +1,4 @@
-# livent
+# Evyent
 
 **The operating system for every event.**
 Plan it. Invite. Coordinate. Pay. Experience. Remember.
@@ -9,7 +9,7 @@ ceremony and a reception. A conference is registration, a keynote, breakout sess
 and a dinner. Each has its own guests, schedule, budget and team, yet all of it belongs
 to one story told to one host and one guest list.
 
-livent's core thesis:
+Evyent's core thesis:
 
 > one event -> multiple phases -> multiple teams -> multiple guests -> one shared workspace
 
@@ -35,10 +35,10 @@ Sign in to the demo workspace with:
 
 | Email | Password | Role |
 | --- | --- | --- |
-| `sarah@livent.app` | `livent2026` | Owner |
-| `manager@livent.app` | `livent2026` | Event manager |
-| `finance@livent.app` | `livent2026` | Finance |
-| `catering@livent.app` | `livent2026` | Catering team lead |
+| `sarah@evyent.com` | `evyent2026` | Owner |
+| `manager@evyent.com` | `evyent2026` | Event manager |
+| `finance@evyent.com` | `evyent2026` | Finance |
+| `catering@evyent.com` | `evyent2026` | Catering team lead |
 
 If `npm install` reports blocked install scripts, approve them once:
 
@@ -110,7 +110,7 @@ silently. Covered by `apps/api/test/seating.test.ts`.
 ## Architecture
 
 ```
-livent/
+Evyent/
   apps/
     api/            Express + Prisma + SQLite, JWT auth
       prisma/       schema.prisma and the demo seed
@@ -149,7 +149,7 @@ Two details worth knowing:
 | `npm test` | Seating engine tests |
 | `npm run db:push` | Apply the schema |
 | `npm run db:seed` | Rebuild the demo event |
-| `npm run db:studio -w @livent/api` | Prisma Studio |
+| `npm run db:studio -w @evyent/api` | Prisma Studio |
 
 ---
 

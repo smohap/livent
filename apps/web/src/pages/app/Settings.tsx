@@ -183,7 +183,7 @@ function MembersPanel({ eventId }: { eventId: string }) {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="manager@livent.app"
+          placeholder="manager@evyent.com"
         />
         <Select label="Role" value={role} onChange={(e) => setRole(e.target.value)}>
           {ROLES.map((option) => (

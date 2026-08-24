@@ -1,13 +1,16 @@
-// livent — the operating system for every event.
+// Evyent — the operating system for every event.
 // Seven foundational objects: Event, Phase, People, Teams, Tasks, Money, Experience.
 // Everything else in the schema attaches to one of these.
 
 generator client {
   provider = "prisma-client-js"
+  // Built on Windows, deployed to Hostinger (CloudLinux, a RHEL derivative).
+  // The extra targets keep one build artifact portable across both.
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "rhel-openssl-1.1.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -57,11 +60,11 @@ model Event {
   name        String
   type        String    @default("wedding")
   category    String    @default("individual")
-  description String    @default("")
-  hostNames   String    @default("")
-  coverUrl    String?
-  logoUrl     String?
-  location    String    @default("")
+  description String    @default("") @db.VarChar(2000)
+  hostNames   String    @default("") @db.VarChar(255)
+  coverUrl    String? @db.Text
+  logoUrl     String? @db.Text
+  location    String    @default("") @db.VarChar(500)
   timezone    String    @default("Pacific/Auckland")
   currency    String    @default("NZD")
   locale      String    @default("en-NZ")
@@ -96,14 +99,14 @@ model Phase {
   eventId         String
   name            String
   displayName     String    @default("")
-  description     String    @default("")
+  description     String    @default("") @db.VarChar(2000)
   position        Int       @default(0)
   date            DateTime?
   startTime       String    @default("")
   endTime         String    @default("")
   venue           String    @default("")
-  address         String    @default("")
-  mapUrl          String    @default("")
+  address         String    @default("") @db.VarChar(500)
+  mapUrl          String    @default("") @db.VarChar(1000)
   dressCode       String    @default("")
   capacity        Int       @default(0)
   requiresRsvp    Boolean   @default(true)
@@ -151,15 +154,15 @@ model Guest {
   name          String
   email         String   @default("")
   phone         String   @default("")
-  organisation  String   @default("")
+  organisation  String   @default("") @db.VarChar(255)
   relationship  String   @default("")
   isVip         Boolean  @default(false)
   isChild       Boolean  @default(false)
   plusOnes      Int      @default(0)
   dietary       String   @default("")
-  allergies     String   @default("")
-  accessibility String   @default("")
-  notes         String   @default("")
+  allergies     String   @default("") @db.VarChar(500)
+  accessibility String   @default("") @db.VarChar(500)
+  notes         String   @default("") @db.VarChar(2000)
   /// Opaque token powering personalised invitation + guest dashboard URLs.
   accessToken   String   @unique @default(cuid())
   createdAt     DateTime @default(now())
@@ -187,7 +190,7 @@ model PhaseInvite {
   partySize           Int       @default(1)
   adults              Int       @default(1)
   children            Int       @default(0)
-  message             String    @default("")
+  message             String    @default("") @db.VarChar(1000)
   transportNeeded     Boolean   @default(false)
   accommodationNeeded Boolean   @default(false)
   respondedAt         DateTime?
@@ -210,7 +213,7 @@ model Team {
   eventId String
   name    String
   colour  String @default("#ffffff")
-  brief   String @default("")
+  brief   String @default("") @db.VarChar(1000)
 
   event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
   tasks       Task[]
@@ -228,7 +231,7 @@ model Task {
   teamId      String?
   ownerId     String?
   title       String
-  detail      String    @default("")
+  detail      String    @default("") @db.VarChar(2000)
   status      String    @default("not_started")
   priority    String    @default("medium")
   dueDate     DateTime?
@@ -252,7 +255,7 @@ model TaskComment {
   id        String   @id @default(cuid())
   taskId    String
   authorId  String
-  body      String
+  body      String @db.Text
   createdAt DateTime @default(now())
 
   task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
@@ -270,7 +273,7 @@ model BudgetLine {
   category  String
   budgeted  Float   @default(0)
   committed Float   @default(0)
-  notes     String  @default("")
+  notes     String  @default("") @db.VarChar(2000)
 
   event    Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
   phase    Phase?    @relation(fields: [phaseId], references: [id], onDelete: SetNull)
@@ -289,7 +292,7 @@ model Invoice {
   vendorId      String?
   budgetLineId  String?
   number        String
-  description   String    @default("")
+  description   String    @default("") @db.VarChar(2000)
   amount        Float     @default(0)
   tax           Float     @default(0)
   currency      String    @default("NZD")
@@ -298,7 +301,7 @@ model Invoice {
   approval      String    @default("submitted")
   payment       String    @default("unpaid")
   paidAmount    Float     @default(0)
-  attachmentUrl String?
+  attachmentUrl String? @db.Text
   createdAt     DateTime  @default(now())
 
   event      Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -318,7 +321,7 @@ model Vendor {
   contact String @default("")
   email   String @default("")
   phone   String @default("")
-  notes   String @default("")
+  notes   String @default("") @db.VarChar(2000)
   rating  Int    @default(0)
 
   event    Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -327,7 +330,7 @@ model Vendor {
   @@index([eventId])
 }
 
-/// Monetary gifts. livent never stores card data - `providerRef` holds a
+/// Monetary gifts. Evyent never stores card data - `providerRef` holds a
 /// tokenised reference from the payment provider (Stripe/Adyen). PRD 6.3.
 model Gift {
   id          String   @id @default(cuid())
@@ -336,12 +339,12 @@ model Gift {
   fromName    String
   amount      Float
   currency    String   @default("NZD")
-  message     String   @default("")
+  message     String   @default("") @db.VarChar(1000)
   anonymous   Boolean  @default(false)
   showAmount  Boolean  @default(false)
   kind        String   @default("cash")
   status      String   @default("received")
-  providerRef String   @default("")
+  providerRef String   @default("") @db.VarChar(255)
   createdAt   DateTime @default(now())
 
   event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -358,7 +361,7 @@ model ScheduleItem {
   id        String @id @default(cuid())
   phaseId   String
   title     String
-  detail    String @default("")
+  detail    String @default("") @db.VarChar(2000)
   startTime String
   endTime   String @default("")
   location  String @default("")
@@ -389,9 +392,9 @@ model MenuItem {
   id          String @id @default(cuid())
   courseId    String
   name        String
-  description String @default("")
+  description String @default("") @db.VarChar(2000)
   dietary     String @default("")
-  allergens   String @default("")
+  allergens   String @default("") @db.VarChar(255)
   position    Int    @default(0)
 
   course     MenuCourse      @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -447,7 +450,7 @@ model SeatingRule {
   id       String @id @default(cuid())
   phaseId  String
   kind     String
-  guestIds String
+  guestIds String @db.Text
   weight   Int    @default(1)
 
   phase Phase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
@@ -459,7 +462,7 @@ model Poll {
   id         String    @id @default(cuid())
   eventId    String
   phaseId    String?
-  question   String
+  question   String @db.Text
   kind       String    @default("single")
   audience   String    @default("guests")
   anonymous  Boolean   @default(true)
@@ -478,7 +481,7 @@ model Poll {
 model PollOption {
   id       String @id @default(cuid())
   pollId   String
-  label    String
+  label    String @db.Text
   position Int    @default(0)
 
   poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
@@ -501,7 +504,7 @@ model Announcement {
   id        String   @id @default(cuid())
   eventId   String
   authorId  String
-  body      String
+  body      String @db.Text
   audience  String   @default("all_guests")
   channels  String   @default("in_app")
   urgent    Boolean  @default(false)
@@ -518,7 +521,7 @@ model Album {
   eventId      String
   phaseId      String?
   name         String
-  coverUrl     String?
+  coverUrl     String? @db.Text
   guestUploads Boolean  @default(true)
   downloads    String   @default("guests")
   createdAt    DateTime @default(now())
@@ -534,9 +537,9 @@ model MediaItem {
   id        String   @id @default(cuid())
   albumId   String
   guestId   String?
-  url       String
+  url       String @db.Text
   kind      String   @default("photo")
-  caption   String   @default("")
+  caption   String   @default("") @db.VarChar(500)
   createdAt DateTime @default(now())
 
   album Album  @relation(fields: [albumId], references: [id], onDelete: Cascade)
@@ -549,7 +552,7 @@ model EventDocument {
   id         String   @id @default(cuid())
   eventId    String
   name       String
-  url        String
+  url        String @db.Text
   category   String   @default("general")
   visibility String   @default("organisers")
   createdAt  DateTime @default(now())
@@ -570,7 +573,7 @@ model TicketType {
   price    Float  @default(0)
   currency String @default("NZD")
   capacity Int    @default(0)
-  perks    String @default("")
+  perks    String @default("") @db.VarChar(500)
   position Int    @default(0)
 
   phase   Phase    @relation(fields: [phaseId], references: [id], onDelete: Cascade)
@@ -598,7 +601,7 @@ model Notification {
   eventId   String
   kind      String
   title     String
-  body      String    @default("")
+  body      String    @default("") @db.VarChar(2000)
   severity  String    @default("info")
   readAt    DateTime?
   createdAt DateTime  @default(now())

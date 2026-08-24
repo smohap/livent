@@ -4,7 +4,7 @@
  */
 const BASE = import.meta.env.VITE_API_URL ?? '';
 
-const TOKEN_KEY = 'livent.token';
+const TOKEN_KEY = 'evyent.token';
 
 export const tokenStore = {
   get: () => localStorage.getItem(TOKEN_KEY),

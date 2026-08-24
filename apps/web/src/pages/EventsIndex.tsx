@@ -32,7 +32,7 @@ export function EventsIndex() {
         <header className="mb-10 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo.svg" alt="" width={32} height={32} />
-            <span className="text-2xl font-semibold tracking-tighter">livent</span>
+            <span className="text-2xl font-semibold tracking-tighter">Evyent</span>
           </Link>
           <button
             type="button"
@@ -145,7 +145,7 @@ function CreateEventDialog({ onClose }: { onClose: () => void }) {
           Create an <em>event</em>
         </h2>
         <p className="mt-1.5 text-sm text-white/55">
-          Pick a template and livent sets up the phases, teams and budget lines for you.
+          Pick a template and Evyent sets up the phases, teams and budget lines for you.
         </p>
 
         <form

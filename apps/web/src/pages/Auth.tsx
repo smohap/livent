@@ -9,8 +9,8 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [name, setName] = useState('');
-  const [email, setEmail] = useState(mode === 'login' ? 'sarah@livent.app' : '');
-  const [password, setPassword] = useState(mode === 'login' ? 'livent2026' : '');
+  const [email, setEmail] = useState(mode === 'login' ? 'sarah@evyent.com' : '');
+  const [password, setPassword] = useState(mode === 'login' ? 'evyent2026' : '');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -39,7 +39,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
         <div className="liquid-glass-strong w-full max-w-md rounded-[1.6rem] p-9">
           <Link to="/" className="mb-8 flex items-center gap-2.5">
             <img src="/logo.svg" alt="" width={30} height={30} />
-            <span className="text-xl font-semibold tracking-tighter">livent</span>
+            <span className="text-xl font-semibold tracking-tighter">Evyent</span>
           </Link>
 
           <h1 className="text-3xl tracking-tight">
@@ -97,7 +97,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
 
           {isLogin ? (
             <p className="mt-4 text-center text-[0.7rem] leading-relaxed text-white/35">
-              Demo workspace pre-filled: sarah@livent.app / livent2026
+              Demo workspace pre-filled: sarah@evyent.com / evyent2026
             </p>
           ) : null}
         </div>

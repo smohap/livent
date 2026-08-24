@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /*
- * livent design system.
+ * Evyent design system.
  * Strict grayscale: every token is an `0 0% X%` HSL triple, no colour anywhere.
  * Depth comes from the two liquid-glass tiers, not from hue.
  */

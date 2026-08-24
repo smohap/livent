@@ -1,4 +1,4 @@
-# Contributing to livent
+# Contributing to Evyent
 
 ## Getting set up
 

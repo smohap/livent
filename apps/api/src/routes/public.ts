@@ -22,7 +22,7 @@ async function guestByToken(token: string) {
   return guest;
 }
 
-/** The public event mini-site (PRD: events.livent.app/name). */
+/** The public event mini-site (PRD: events.evyent.com/name). */
 publicRouter.get(
   '/events/:slug',
   asyncRoute(async (req, res) => {
@@ -360,7 +360,7 @@ publicRouter.get(
 );
 
 /**
- * Monetary gift. livent records the gift and a tokenised provider reference
+ * Monetary gift. Evyent records the gift and a tokenised provider reference
  * only; card details never reach this service. In production the client would
  * complete payment with Stripe/Adyen first and post the resulting token here.
  */

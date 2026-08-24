@@ -16,3 +16,6 @@ apps/api/prisma/migrations/dev.db*
 coverage/
 .turbo/
 apps/api/uploads/
+
+# local deployment artifacts and secrets - never commit
+.deploy/

@@ -15,9 +15,9 @@ const HERO_VIDEO =
   'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260315_073750_51473149-4350-4920-ae24-c8214286f323.mp4';
 
 const SOCIALS = [
-  { Icon: Twitter, label: 'livent on Twitter' },
-  { Icon: Linkedin, label: 'livent on LinkedIn' },
-  { Icon: Instagram, label: 'livent on Instagram' },
+  { Icon: Twitter, label: 'Evyent on Twitter' },
+  { Icon: Linkedin, label: 'Evyent on LinkedIn' },
+  { Icon: Instagram, label: 'Evyent on Instagram' },
 ];
 
 export function Landing() {
@@ -51,7 +51,7 @@ function LeftPanel() {
         <nav className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo.svg" alt="" width={32} height={32} />
-            <span className="text-2xl font-semibold tracking-tighter text-white">livent</span>
+            <span className="text-2xl font-semibold tracking-tighter text-white">Evyent</span>
           </Link>
           <button
             type="button"
@@ -103,7 +103,7 @@ function LeftPanel() {
           <div className="mt-6 flex items-center justify-center gap-4">
             <span className="h-px w-12 bg-white/20" />
             <span className="text-[0.68rem] uppercase tracking-[0.2em] text-white/50">
-              Livent product principle
+              Evyent product principle
             </span>
             <span className="h-px w-12 bg-white/20" />
           </div>

@@ -18,8 +18,9 @@ if (existsSync(target)) {
 }
 
 const contents = [
-  'DATABASE_URL="file:./dev.db"',
-  'JWT_SECRET="livent-local-dev-secret-change-me"',
+  'DATABASE_URL="mysql://root:root@localhost:3306/evyent"',
+  // Evyent uses MySQL so local development matches Hostinger production.
+  'JWT_SECRET="evyent-local-dev-secret-change-me"',
   'PORT=4000',
   'WEB_ORIGIN="http://localhost:5173"',
   '',

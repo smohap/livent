@@ -58,7 +58,7 @@ export function EventShell() {
         <aside className="liquid-glass-strong sticky top-0 hidden h-screen w-[250px] shrink-0 flex-col gap-4 rounded-none p-4 lg:flex">
           <Link to="/app" className="flex items-center gap-2.5 px-2.5 pb-4 pt-2">
             <img src="/logo.svg" alt="" width={30} height={30} />
-            <span className="text-xl font-semibold tracking-tighter">livent</span>
+            <span className="text-xl font-semibold tracking-tighter">Evyent</span>
           </Link>
 
           <div className="liquid-glass rounded-2xl px-3.5 py-3">

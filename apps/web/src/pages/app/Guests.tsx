@@ -234,7 +234,7 @@ function exportCsv(guests: Guest[], phases: Phase[]) {
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'livent-guests.csv';
+  link.download = 'evyent-guests.csv';
   link.click();
   URL.revokeObjectURL(url);
 }

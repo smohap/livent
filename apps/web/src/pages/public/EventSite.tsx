@@ -144,7 +144,7 @@ export function EventSite() {
             Have an invitation link? Open it to RSVP, choose your meal and find your table.
           </p>
           <p className="mt-6 text-[0.68rem] uppercase tracking-[0.2em] text-white/25">
-            Powered by livent
+            Powered by Evyent
           </p>
         </footer>
       </main>

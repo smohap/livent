@@ -1,23 +1,24 @@
 {
-  "name": "livent",
+  "name": "evyent",
   "private": true,
   "version": "0.1.0",
-  "description": "livent \u2014 the operating system for every event. One master event, unlimited connected phases.",
+  "description": "Evyent - the operating system for every event. One master event, unlimited connected phases.",
   "workspaces": [
     "apps/api",
     "apps/web"
   ],
   "scripts": {
     "dev": "npm run bootstrap && concurrently -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
-    "dev:api": "npm run dev -w @livent/api",
-    "dev:web": "npm run dev -w @livent/web",
-    "build": "npm run build -w @livent/api && npm run build -w @livent/web",
-    "typecheck": "npm run typecheck -w @livent/api && npm run typecheck -w @livent/web",
-    "db:push": "npm run db:push -w @livent/api",
-    "db:seed": "npm run db:seed -w @livent/api",
+    "dev:api": "npm run dev -w @evyent/api",
+    "dev:web": "npm run dev -w @evyent/web",
+    "build": "npm run build -w @evyent/web && npm run build -w @evyent/api",
+    "typecheck": "npm run typecheck -w @evyent/api && npm run typecheck -w @evyent/web",
+    "db:push": "npm run db:push -w @evyent/api",
+    "db:seed": "npm run db:seed -w @evyent/api",
     "setup": "npm install && npm run bootstrap && npm run db:push && npm run db:seed",
-    "test": "npm run test -w @livent/api",
-    "bootstrap": "node scripts/bootstrap-env.mjs"
+    "test": "npm run test -w @evyent/api",
+    "bootstrap": "node scripts/bootstrap-env.mjs",
+    "start": "npm run start -w @evyent/api"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

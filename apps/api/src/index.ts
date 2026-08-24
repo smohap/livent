@@ -4,5 +4,5 @@ import { env } from './lib/env.js';
 const app = createApp();
 
 app.listen(env.port, () => {
-  console.log(`livent api listening on http://localhost:${env.port}`);
+  console.log(`Evyent api listening on http://localhost:${env.port}`);
 });
