@@ -1,4 +1,20 @@
-import 'dotenv/config';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { config } from 'dotenv';
+
+/*
+ * dotenv's default reads .env from process.cwd(). The host may launch the
+ * compiled entry point from the repository root rather than from apps/api, so
+ * resolve the file relative to this module and fall back to the working
+ * directory. Neither call overwrites a variable the platform already set.
+ */
+const HERE = dirname(fileURLToPath(import.meta.url));
+
+/** dist/lib/env.js -> apps/api */
+export const API_ROOT = resolve(HERE, '../..');
+
+config({ path: resolve(API_ROOT, '.env') });
+config();
 
 function required(name: string, fallback?: string): string {
   const value = process.env[name] ?? fallback;

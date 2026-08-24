@@ -32,5 +32,6 @@
     "esbuild@0.28.2": true,
     "prisma@6.19.3": true,
     "esbuild@0.25.12": true
-  }
+  },
+  "main": "apps/api/dist/index.js"
 }
