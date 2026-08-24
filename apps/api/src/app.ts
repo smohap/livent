@@ -21,6 +21,22 @@ import { publicRouter } from './routes/public.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
+/*
+ * Migrations run after boot, so /health reports their outcome. The app root is
+ * outside the document root on this host, which makes the process log
+ * unreadable, so the app has to surface its own startup state.
+ */
+interface MigrationState {
+  state: 'pending' | 'applied' | 'failed' | 'skipped';
+  detail?: string;
+}
+
+let migration: MigrationState = { state: 'pending' };
+
+export function setMigrationState(next: MigrationState): void {
+  migration = next;
+}
+
 /** Where `vite build` puts the SPA, relative to the compiled API at dist/. */
 const WEB_DIST = resolve(HERE, '../../web/dist');
 
@@ -62,7 +78,12 @@ export function createApp() {
   if (env.nodeEnv !== 'test') app.use(morgan(env.isProd ? 'combined' : 'dev'));
 
   app.get('/health', (_req, res) => {
-    res.json({ ok: true, service: 'evyent-api', version: '0.1.0' });
+    res.status(migration.state === 'failed' ? 503 : 200).json({
+      ok: migration.state !== 'failed',
+      service: 'evyent-api',
+      version: '0.1.0',
+      migration,
+    });
   });
 
   // Credential endpoints are the ones worth brute-forcing, so they get their

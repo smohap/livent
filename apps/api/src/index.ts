@@ -1,42 +1,51 @@
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { createApp } from './app.js';
+import { createApp, setMigrationState } from './app.js';
 import { API_ROOT, env } from './lib/env.js';
 
 /*
- * Apply pending migrations before serving. This lives here rather than only in
- * the npm start script because the host may launch the compiled entry point
- * directly, in which case package.json scripts never run and the schema would
- * silently never be created.
+ * The host runs this file directly through Passenger, so package.json scripts
+ * never execute and `prisma migrate deploy` has to happen here or the schema
+ * would never be created.
  *
- * `migrate deploy` is idempotent: it applies what is outstanding and is a no-op
- * once the database is current.
+ * It runs *after* the server is listening, for two reasons: Passenger applies a
+ * startup timeout that a slow migration could exceed, and a database problem
+ * should surface as a readable status rather than a process that never binds.
  */
-function migrate(): void {
+function migrate(): string {
   const require = createRequire(import.meta.url);
   const prismaCli = require.resolve('prisma/build/index.js');
 
-  console.log('Applying database migrations...');
-  execFileSync(process.execPath, [prismaCli, 'migrate', 'deploy'], {
+  const output = execFileSync(process.execPath, [prismaCli, 'migrate', 'deploy'], {
     cwd: API_ROOT,
-    stdio: 'inherit',
+    encoding: 'utf8',
     env: process.env,
+    timeout: 120_000,
   });
-}
-
-if (process.env.RUN_MIGRATIONS !== 'false') {
-  try {
-    migrate();
-  } catch (error) {
-    // A broken schema means every request fails, so surface it and stop rather
-    // than serving a half-working app.
-    console.error('Database migration failed. Refusing to start.', error);
-    process.exit(1);
-  }
+  return output.trim().split('\n').slice(-3).join(' | ');
 }
 
 const app = createApp();
 
 app.listen(env.port, () => {
   console.log(`Evyent listening on port ${env.port} (${env.nodeEnv})`);
+
+  if (process.env.RUN_MIGRATIONS === 'false') {
+    setMigrationState({ state: 'skipped' });
+    return;
+  }
+
+  try {
+    const summary = migrate();
+    setMigrationState({ state: 'applied', detail: summary });
+    console.log('Migrations applied.', summary);
+  } catch (error) {
+    const err = error as { message?: string; stderr?: string; stdout?: string };
+    const detail = [err.stderr, err.stdout, err.message]
+      .filter(Boolean)
+      .join(' | ')
+      .slice(0, 1500);
+    setMigrationState({ state: 'failed', detail });
+    console.error('Database migration failed.', detail);
+  }
 });
